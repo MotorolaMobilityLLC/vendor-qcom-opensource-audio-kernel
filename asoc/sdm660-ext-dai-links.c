@@ -42,8 +42,25 @@ static struct snd_soc_card snd_soc_card_msm_card_tasha = {
 	.late_probe = msm_snd_card_tasha_late_probe,
 };
 
+#ifdef CONFIG_SND_SOC_CS35L41
+#define AMP_CODEC_NAME	"cs35l41.0-0040"
+#define AMP_DAI_NAME	"cs35l41-pcm"
+#else
+#define AMP_CODEC_NAME	"cs35l36.0-0040",
+#define AMP_DAI_NAME	"cs35l36-pcm"
+#endif
+
+static struct snd_soc_codec_conf cirrus_amp_codec_conf[] = {
+		{
+				.dev_name       = AMP_CODEC_NAME,
+				.name_prefix    = "SPK",
+		},
+};
+
 struct snd_soc_card snd_soc_card_madera = {
 	.name		= "sdm710-madera-snd-card",
+	.codec_conf	= cirrus_amp_codec_conf,
+	.num_configs	= ARRAY_SIZE(cirrus_amp_codec_conf),
 };
 
 static struct snd_soc_ops msm_ext_slimbus_be_ops = {
@@ -1860,7 +1877,7 @@ static int cs35l35_dai_init(struct snd_soc_pcm_runtime *rtd)
 		dev_err(codec->dev, "Failed to set MCLK %d\n", ret);
 		return ret;
 	}
-	snd_soc_dapm_ignore_suspend(dapm, "AMP Playback");
+	snd_soc_dapm_ignore_suspend(dapm, "SPK AMP Playback");
 	snd_soc_dapm_sync(dapm);
 	return 0;
 }
@@ -2039,13 +2056,8 @@ static struct snd_soc_dai_link madera_be_dai_links[] = {
 		.stream_name = "MADERA-AMP Playback",
 		.cpu_name = "cs47l90-codec",
 		.cpu_dai_name = "cs47l90-aif1",
-#ifdef CONFIG_SND_SOC_CS35L41
-		.codec_name = "cs35l41.0-0040",
-		.codec_dai_name = "cs35l41-pcm",
-#else
-		.codec_name = "cs35l36.0-0040",
-		.codec_dai_name = "cs35l36-pcm",
-#endif
+		.codec_name = AMP_CODEC_NAME,
+		.codec_dai_name = AMP_DAI_NAME,
 		.init = cs35l35_dai_init,
 		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			SND_SOC_DAIFMT_CBS_CFS,
