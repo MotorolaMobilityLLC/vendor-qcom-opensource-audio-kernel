@@ -2220,6 +2220,14 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 		return ret;
 	}
 
+	ret = snd_soc_add_codec_controls(codec, msm_common_snd_controls,
+					 msm_common_snd_controls_size());
+	if (ret < 0) {
+		pr_err("%s: add_common_snd_controls failed: %d\n",
+			__func__, ret);
+		return ret;
+	}
+
 	ret = snd_soc_dapm_new_controls(dapm, msm_madera_dapm_widgets,
 			ARRAY_SIZE(msm_madera_dapm_widgets));
 	if (ret != 0) {
@@ -2255,18 +2263,19 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(dapm, "IN1AR");
 	snd_soc_dapm_ignore_suspend(dapm, "IN1BL");
 	snd_soc_dapm_ignore_suspend(dapm, "IN1BR");
-	snd_soc_dapm_ignore_suspend(dapm, "IN2L");
+	snd_soc_dapm_ignore_suspend(dapm, "IN2AL");
+	snd_soc_dapm_ignore_suspend(dapm, "IN2BL");
 	snd_soc_dapm_ignore_suspend(dapm, "IN2R");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1TX1");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1TX2");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1RX1");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1RX2");
-	snd_soc_dapm_ignore_suspend(dapm, "HPOUTL");
-	snd_soc_dapm_ignore_suspend(dapm, "HPOUTR");
-	snd_soc_dapm_ignore_suspend(dapm, "SPKOUTN");
-	snd_soc_dapm_ignore_suspend(dapm, "SPKOUTP");
-	snd_soc_dapm_ignore_suspend(dapm, "SPKDATL");
-	snd_soc_dapm_ignore_suspend(dapm, "SPKDATR");
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUT1L");
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUT1R");
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUT2L");
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUT2R");
+	snd_soc_dapm_ignore_suspend(dapm, "SPKDAT1L");
+	snd_soc_dapm_ignore_suspend(dapm, "SPKDAT1R");
 	snd_soc_dapm_ignore_suspend(dapm, "DSP2 Virtual Output");
 	snd_soc_dapm_ignore_suspend(dapm, "DSP3 Virtual Output");
 	snd_soc_dapm_ignore_suspend(dapm, "DSP Virtual Input");
