@@ -26,6 +26,9 @@
 #include <ipc/apr_tal.h>
 #include "adsp_err.h"
 #include <dsp/q6core.h>
+#ifdef CONFIG_CIRRUS_PLAYBACK
+#include <sound/msm-cirrus-playback.h>
+#endif
 
 #define WAKELOCK_TIMEOUT	5000
 enum {
@@ -129,6 +132,18 @@ static atomic_t afe_ports_mad_type[SLIMBUS_PORT_LAST - SLIMBUS_0_RX];
 static unsigned long afe_configured_cmd;
 
 static struct afe_ctl this_afe;
+
+#ifdef CONFIG_CIRRUS_PLAYBACK
+int32_t (*crus_afe_callback)(void *payload, int size);
+
+extern int crus_afe_set_callback(
+	int32_t (*crus_afe_callback_func)(void *payload, int size))
+{
+	crus_afe_callback = crus_afe_callback_func;
+	return 0;
+}
+EXPORT_SYMBOL(crus_afe_set_callback);
+#endif
 
 #define TIMEOUT_MS 1000
 #define Q6AFE_MAX_VOLUME 0x3FFF
@@ -384,6 +399,11 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 		if (payload[2] == AFE_PARAM_ID_DEV_TIMING_STATS) {
 			av_dev_drift_afe_cb_handler(data->payload,
 						    data->payload_size);
+#if defined(CONFIG_CIRRUS_PLAYBACK)
+                } else if (payload[1] == CIRRUS_SE) {
+                        crus_afe_callback(data->payload, data->payload_size);
+                        atomic_set(&this_afe.state, 0);
+#endif
 		} else {
 			if (sp_make_afe_callback(data->payload,
 						 data->payload_size))
@@ -830,6 +850,21 @@ static int afe_apr_send_pkt(void *data, wait_queue_head_t *wait)
 	pr_debug("%s: leave %d\n", __func__, ret);
 	return ret;
 }
+
+#ifdef CONFIG_CIRRUS_PLAYBACK
+extern int afe_apr_send_pkt_crus(void *data, int index)
+{
+	int ret = 0;
+
+	ret = afe_q6_interface_prepare();
+	if (ret != 0) {
+		pr_err("%s: Q6 interface prepare failed %d\n", __func__, ret);
+		return -EINVAL;
+	}
+	return afe_apr_send_pkt(data, &this_afe.wait[index]);
+}
+EXPORT_SYMBOL(afe_apr_send_pkt_crus);
+#endif
 
 static int afe_send_cal_block(u16 port_id, struct cal_block_data *cal_block)
 {
@@ -4140,6 +4175,9 @@ int afe_get_port_index(u16 port_id)
 		return -EINVAL;
 	}
 }
+#if defined (CONFIG_CIRRUS_PLAYBACK)
+EXPORT_SYMBOL(afe_get_port_index);
+#endif
 
 /**
  * afe_open -
