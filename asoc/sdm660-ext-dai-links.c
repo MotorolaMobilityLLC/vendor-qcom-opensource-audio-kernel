@@ -1885,7 +1885,11 @@ static int cs35l35_dai_init(struct snd_soc_pcm_runtime *rtd)
 		dev_err(codec->dev, "Failed to set MCLK %d\n", ret);
 		return ret;
 	}
+#if defined(CONFIG_SND_SOC_CS35L36)
 	snd_soc_dapm_ignore_suspend(dapm, "SPK AMP Playback");
+#else
+	snd_soc_dapm_ignore_suspend(dapm, "SPK SPK");
+#endif
 	snd_soc_dapm_sync(dapm);
 	return 0;
 }
