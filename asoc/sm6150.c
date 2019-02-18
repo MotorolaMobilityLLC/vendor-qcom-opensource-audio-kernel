@@ -8275,8 +8275,8 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 		return ret;
 	}
 
-	ret = snd_soc_add_codec_controls(codec, msm_tavil_snd_controls,
-					 ARRAY_SIZE(msm_tavil_snd_controls));
+	ret = snd_soc_add_codec_controls(codec, msm_ext_snd_controls,
+					 ARRAY_SIZE(msm_ext_snd_controls));
 	if (ret < 0) {
 		pr_err("%s: add_codec_controls failed, err %d\n",
 			__func__, ret);
@@ -9778,6 +9778,7 @@ static void sm6150_ssr_disable(struct device *dev, void *data)
 	}
 }
 
+#ifndef CONFIG_SND_SOC_MADERA
 static int msm_ext_prepare_hifi(struct msm_asoc_mach_data *pdata)
 {
 	int ret = 0;
@@ -9804,6 +9805,7 @@ static int msm_ext_prepare_hifi(struct msm_asoc_mach_data *pdata)
 err:
 	return ret;
 }
+#endif
 
 static const struct snd_event_ops sm6150_ssr_ops = {
 	.enable = sm6150_ssr_enable,
