@@ -22,7 +22,7 @@
 #include "codecs/core.h"
 #include "codecs/wcd9335.h"
 #include <linux/pm_qos.h>
-#include <madera.h>
+#include <sound/soc/codecs/madera.h>
 
 #define DEV_NAME_STR_LEN            32
 #define __CHIPSET__ "SDM660 "

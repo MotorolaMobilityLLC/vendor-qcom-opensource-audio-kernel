@@ -19,7 +19,7 @@
 #include <sound/pcm_params.h>
 #include <dsp/q6core.h>
 #include <dsp/audio_notifier.h>
-#include <madera.h>
+#include <sound/soc/codecs/madera.h>
 #include "msm-pcm-routing-v2.h"
 #include "sdm660-common.h"
 #include "sdm660-external.h"
