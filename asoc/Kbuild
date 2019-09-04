@@ -85,6 +85,15 @@ MOT_INC := -I$(TOP)/motorola/kernel/modules/include
 
 ############ ASoC Drivers ############
 
+ifneq ($(filter m y,$(CONFIG_SND_SOC_CS47L35)),)
+EXTRA_CFLAGS += -DCONFIG_SND_SOC_CS47L35
+else
+EXTRA_CFLAGS += -DCONFIG_SND_SOC_CS47L90
+endif
+
+ifneq (,$(filter racerl%,$(TARGET_PRODUCT)))
+EXTRA_CFLAGS += -DCONFIG_SND_SOC_CS35L41_STEREO -DCONFIG_PRODUCT_RACERL
+endif
 
 # for SDM6xx sound card driver
 ifdef CONFIG_SND_SOC_SDM670
