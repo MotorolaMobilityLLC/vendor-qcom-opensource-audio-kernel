@@ -2158,13 +2158,16 @@ err_afe_cfg:
 }
 EXPORT_SYMBOL(msm_audrx_init);
 
-static struct snd_soc_dapm_route cs47l35_audio_paths[] = {
+static struct snd_soc_dapm_route cirrus_audio_paths[] = {
 	{"SLIMBUS_0_RX", NULL, "MCLK"},
 	{"SLIMBUS_5_RX", NULL, "MCLK"},
 	{"SLIMBUS_0_TX", NULL, "MCLK"},
 	{"SLIMBUS_5_TX", NULL, "MCLK"},
 
 	{"AIF1 Playback", NULL, "SPK AMP Capture"},
+#ifdef CONFIG_SND_SOC_CS35L41_STEREO
+	{"AIF1 Playback", NULL, "RCV AMP Capture"},
+#endif
 	{"SPK AMP Playback", NULL, "OPCLK"},
 	{"SPK AMP Capture", NULL, "OPCLK"},
 };
@@ -2174,7 +2177,7 @@ static const struct snd_soc_dapm_widget msm_madera_dapm_widgets[] = {
 		msm_ext_mclk_event, SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
 };
 
-int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
+int cirrus_codec_init(struct snd_soc_pcm_runtime *rtd)
 {
 	int ret;
 	struct snd_soc_codec *codec = rtd->codec;
@@ -2235,8 +2238,8 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 		return ret;
 	}
 
-	ret = snd_soc_dapm_add_routes(dapm, cs47l35_audio_paths,
-			ARRAY_SIZE(cs47l35_audio_paths));
+	ret = snd_soc_dapm_add_routes(dapm, cirrus_audio_paths,
+			ARRAY_SIZE(cirrus_audio_paths));
 	if (ret != 0) {
 		dev_err(codec->dev, "Failed to add audio routes %d\n", ret);
 		return ret;
@@ -2263,19 +2266,28 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(dapm, "IN1AR");
 	snd_soc_dapm_ignore_suspend(dapm, "IN1BL");
 	snd_soc_dapm_ignore_suspend(dapm, "IN1BR");
+#ifdef CONFIG_SND_SOC_CS47L35
+	snd_soc_dapm_ignore_suspend(dapm, "IN2L");
+#else
 	snd_soc_dapm_ignore_suspend(dapm, "IN2AL");
 	snd_soc_dapm_ignore_suspend(dapm, "IN2BL");
+#endif
 	snd_soc_dapm_ignore_suspend(dapm, "IN2R");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1TX1");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1TX2");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1RX1");
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1RX2");
+#ifdef CONFIG_SND_SOC_CS47L35
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUTL");
+	snd_soc_dapm_ignore_suspend(dapm, "HPOUTR");
+#else
 	snd_soc_dapm_ignore_suspend(dapm, "HPOUT1L");
 	snd_soc_dapm_ignore_suspend(dapm, "HPOUT1R");
 	snd_soc_dapm_ignore_suspend(dapm, "HPOUT2L");
 	snd_soc_dapm_ignore_suspend(dapm, "HPOUT2R");
 	snd_soc_dapm_ignore_suspend(dapm, "SPKDAT1L");
 	snd_soc_dapm_ignore_suspend(dapm, "SPKDAT1R");
+#endif
 	snd_soc_dapm_ignore_suspend(dapm, "DSP2 Virtual Output");
 	snd_soc_dapm_ignore_suspend(dapm, "DSP3 Virtual Output");
 	snd_soc_dapm_ignore_suspend(dapm, "DSP Virtual Input");
@@ -2306,7 +2318,7 @@ int msm_cs47l35_init(struct snd_soc_pcm_runtime *rtd)
 	codec_reg_done = true;
 	return 0;
 }
-EXPORT_SYMBOL(msm_cs47l35_init);
+EXPORT_SYMBOL(cirrus_codec_init);
 
 /**
  * msm_ext_register_audio_notifier - register SSR notifier.

@@ -44,6 +44,14 @@ else
 DLKM_DIR := $(TOP)/device/qcom/common/dlkm
 endif
 
+ifeq ($(strip $(CIRRUS_CODEC)),cs47l35)
+KERNEL_CFLAGS  += CONFIG_SND_SOC_CS47L35=m
+else ifeq ($(strip $(CIRRUS_CODEC)),cs47l90)
+KERNEL_CFLAGS  += CONFIG_SND_SOC_CS47L90=m
+else
+KERNEL_CFLAGS  += CONFIG_SND_SOC_CS47L90=m
+endif
+
 # Build audio.ko as $(AUDIO_CHIPSET)_audio.ko
 ###########################################################
 # This is set once per LOCAL_PATH, not per (kernel) module
