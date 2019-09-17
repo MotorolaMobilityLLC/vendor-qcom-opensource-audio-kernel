@@ -43,9 +43,9 @@ static struct snd_soc_card snd_soc_card_msm_card_tasha = {
 };
 
 #ifdef CONFIG_SND_SOC_CS35L41
-#define RCV_AMP_CODEC_NAME   "cs35l41.2-0041"
+#define RCV_AMP_CODEC_NAME   "cs35l41.3-0041"
 #ifdef CONFIG_PRODUCT_RACERL
-#define SPK_AMP_CODEC_NAME   "cs35l41.2-0040"
+#define SPK_AMP_CODEC_NAME   "cs35l41.3-0040"
 #else
 #define SPK_AMP_CODEC_NAME   "cs35l41.0-0040"
 #endif
