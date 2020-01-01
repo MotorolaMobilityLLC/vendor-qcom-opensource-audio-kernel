@@ -50,6 +50,9 @@ ifeq ($(KERNEL_BUILD), 0)
 		export
 		INCS    +=  -include $(AUDIO_ROOT)/config/sdm450autoconf.h
 	endif
+	ifneq (,$(filter astro%, $(TARGET_PRODUCT)))
+		INCS    +=  -include $(AUDIO_ROOT)/config/sdm710astroconf.h
+	endif
 endif
 
 # As per target team, build is done as follows:
