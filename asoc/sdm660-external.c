@@ -1141,6 +1141,7 @@ int msm_ext_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 }
 EXPORT_SYMBOL(msm_ext_be_hw_params_fixup);
 
+#ifdef CONFIG_SND_SOC_MADERA
 #define CS47L35_SLIM_RX_MAX	6
 #define CS47L35_SLIM_TX_MAX	6
 
@@ -1148,6 +1149,7 @@ static unsigned int msm_slim_rx_ch[CS47L35_SLIM_RX_MAX] = {144, 145, 146, 147,
 						148, 149};
 static unsigned int msm_slim_tx_ch[CS47L35_SLIM_TX_MAX] = {128, 129, 130, 131,
 						132, 133};
+#endif
 
 /**
  * msm_snd_hw_params - hw params ops of backend dailink.

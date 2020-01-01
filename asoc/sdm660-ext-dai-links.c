@@ -67,6 +67,7 @@ static struct snd_soc_card snd_soc_card_msm_card_tasha = {
 #define CIRRUS_CODEC_AIF1_NAME    "cs47l90-aif1"
 #endif
 
+#ifdef CONFIG_SND_SOC_CS35L41
 static struct snd_soc_codec_conf cirrus_amp_codec_conf[] = {
 	{
 		.dev_name       = SPK_AMP_CODEC_NAME,
@@ -79,12 +80,15 @@ static struct snd_soc_codec_conf cirrus_amp_codec_conf[] = {
 	},
 #endif
 };
+#endif
 
+#ifdef CONFIG_SND_SOC_MADERA
 struct snd_soc_card snd_soc_card_madera = {
 	.name		= "sdm710-madera-snd-card",
 	.codec_conf	= cirrus_amp_codec_conf,
 	.num_configs	= ARRAY_SIZE(cirrus_amp_codec_conf),
 };
+#endif
 
 static struct snd_soc_ops msm_ext_slimbus_be_ops = {
 	.hw_params = msm_snd_hw_params,
@@ -1932,6 +1936,7 @@ static const struct snd_soc_pcm_stream cirrus_amp_params[] = {
 	},
 };
 
+#ifdef CONFIG_SND_SOC_MADERA
 static int cirrus_amp_dai_init(struct snd_soc_pcm_runtime *rtd)
 {
 	int ret;
@@ -1980,6 +1985,7 @@ static int cirrus_amp_dai_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_sync(dapm);
 	return 0;
 }
+#endif
 
 static struct snd_soc_dai_link madera_be_dai_links[] = {
 	/* Backend DAI Links */
@@ -2140,6 +2146,7 @@ static struct snd_soc_dai_link madera_be_dai_links[] = {
 		.ignore_pmdown_time = 1,
 		.ignore_suspend = 1,
 	},
+#ifdef CONFIG_SND_SOC_CS35L41
 	{ /* codec to amp link */
 		.name = "MADERA-AMP",
 		.stream_name = "MADERA-AMP Playback",
@@ -2157,7 +2164,7 @@ static struct snd_soc_dai_link madera_be_dai_links[] = {
 		.num_params = ARRAY_SIZE(cirrus_amp_params),
 	},
 #ifdef CONFIG_SND_SOC_CS35L41_STEREO
-		{ /* codec to amp link */
+	{ /* codec to amp link */
 		.name = "MADERA-AMP-RCV",
 		.stream_name = "MADERA-AMP-RCV Playback",
 		.cpu_name = CIRRUS_CODEC_NAME,
@@ -2173,6 +2180,7 @@ static struct snd_soc_dai_link madera_be_dai_links[] = {
 		.params = &cirrus_amp_params[0],
 		.num_params = ARRAY_SIZE(cirrus_amp_params),
 	},
+#endif
 #endif
 };
 
@@ -2296,9 +2304,12 @@ struct snd_soc_card *populate_snd_card_dailinks(struct device *dev,
 	int ret, len1, len2, len3, len4, len5;
 	enum codec_variant codec_ver = 0;
 
+#ifdef CONFIG_SND_SOC_MADERA
 	if (snd_card_val == EXT_SND_CARD_MADERA) {
 		card = &snd_soc_card_madera;
-	} else if (snd_card_val == EXT_SND_CARD_TASHA) {
+	} else
+#endif
+	if (snd_card_val == EXT_SND_CARD_TASHA) {
 		card = &snd_soc_card_msm_card_tasha;
 	} else if (snd_card_val == EXT_SND_CARD_TAVIL) {
 		card = &snd_soc_card_msm_card_tavil;
