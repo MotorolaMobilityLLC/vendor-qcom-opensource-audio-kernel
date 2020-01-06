@@ -571,6 +571,37 @@ static int int_mi2s_get_idx_from_beid(int32_t id)
 	return idx;
 }
 
+#ifdef CONFIG_SND_SOC_AWINIC_AW882XX
+static int msm_aw882xx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+                            struct snd_pcm_hw_params *params)
+{
+       struct snd_interval *rate = hw_param_interval(params,
+                                   SNDRV_PCM_HW_PARAM_RATE);
+       struct snd_interval *channels = hw_param_interval(params,
+                                   SNDRV_PCM_HW_PARAM_CHANNELS);
+
+       rate->min = rate->max = SAMPLING_RATE_48KHZ;
+       channels->min = channels->max = 2;
+
+       return 0;
+}
+
+static int msm_aw882xx_mi2s_snd_hw_params(struct snd_pcm_substream *substream,
+                          struct snd_pcm_hw_params *params)
+{
+       pr_debug("%s(): substream = %s  stream = %d\n", __func__,
+              substream->name, substream->stream);
+
+       if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
+              param_set_mask(params, SNDRV_PCM_HW_PARAM_FORMAT,
+                            SNDRV_PCM_FORMAT_S16_LE);
+       else
+              param_set_mask(params, SNDRV_PCM_HW_PARAM_FORMAT,
+                            SNDRV_PCM_FORMAT_S16_LE);
+       return 0;
+}
+#endif
+
 static int msm_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 				  struct snd_pcm_hw_params *params)
 {
@@ -1732,6 +1763,14 @@ static struct snd_soc_ops msm_mi2s_be_ops = {
 	.startup = msm_mi2s_snd_startup,
 	.shutdown = msm_mi2s_snd_shutdown,
 };
+
+#ifdef CONFIG_SND_SOC_AWINIC_AW882XX
+static struct snd_soc_ops msm_aw882xx_be_ops = {
+	.startup = msm_mi2s_snd_startup,
+	.shutdown = msm_mi2s_snd_shutdown,
+	.hw_params = msm_aw882xx_mi2s_snd_hw_params,
+};
+#endif
 
 static struct snd_soc_ops msm_aux_pcm_be_ops = {
 	.startup = msm_aux_pcm_snd_startup,
@@ -2942,8 +2981,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_PRI_MI2S_RX,
-		.be_hw_params_fixup = msm_common_be_hw_params_fixup,
-		.ops = &msm_mi2s_be_ops,
+		.be_hw_params_fixup = msm_aw882xx_be_hw_params_fixup,
+		.ops = &msm_aw882xx_be_ops,
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 	},
@@ -2957,8 +2996,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.no_pcm = 1,
 		.dpcm_capture = 1,
 		.id = MSM_BACKEND_DAI_PRI_MI2S_TX,
-		.be_hw_params_fixup = msm_common_be_hw_params_fixup,
-		.ops = &msm_mi2s_be_ops,
+		.be_hw_params_fixup = msm_aw882xx_be_hw_params_fixup,
+		.ops = &msm_aw882xx_be_ops,
 		.ignore_suspend = 1,
 	},
 #else
