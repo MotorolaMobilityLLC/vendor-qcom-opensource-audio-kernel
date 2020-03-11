@@ -233,6 +233,7 @@ static struct wcd_mbhc_config mbhc_cfg = {
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
+	.is_selfiestick = false,
 	.key_code[0] = KEY_MEDIA,
 	.key_code[1] = KEY_VOICECOMMAND,
 	.key_code[2] = KEY_VOLUMEUP,
@@ -246,6 +247,7 @@ static struct wcd_mbhc_config mbhc_cfg = {
 	.mbhc_micbias = 0,
 	.anc_micbias = 0,
 	.enable_anc_mic_detect = false,
+	.selfiestick_th = 50000,
 };
 
 static struct dev_config proxy_rx_cfg = {
