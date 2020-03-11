@@ -9,6 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>
@@ -597,7 +598,7 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 
 		mbhc->hph_type = WCD_MBHC_HPH_NONE;
 		mbhc->zl = mbhc->zr = 0;
-		pr_debug("%s: Reporting removal %d(%x)\n", __func__,
+		pr_info("%s: Reporting removal %d(%x)\n", __func__,
 			 jack_type, mbhc->hph_status);
 		wcd_mbhc_jack_report(mbhc, &mbhc->headset_jack,
 				mbhc->hph_status, WCD_MBHC_JACK_MASK);
@@ -714,13 +715,22 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 				}
 				pr_debug("%s: Marking jack type as SND_JACK_LINEOUT\n",
 				__func__);
-			}
+			} else if (((mbhc->zl > mbhc->mbhc_cfg->selfiestick_th &&
+				mbhc->zl < MAX_IMPED) &&
+				(mbhc->zr > mbhc->mbhc_cfg->selfiestick_th &&
+				 mbhc->zr < MAX_IMPED) &&
+				(jack_type == SND_JACK_UNSUPPORTED))) {
+				jack_type = SND_JACK_HEADSET;
+				mbhc->current_plug = MBHC_PLUG_TYPE_HEADSET;
+				mbhc->mbhc_cfg->is_selfiestick = true;
+				mbhc->jiffies_atreport = jiffies;
+				}
 		}
 
 		mbhc->hph_status |= jack_type;
 
-		pr_info("%s: Reporting insertion %d(%x)\n", __func__,
-			 jack_type, mbhc->hph_status);
+		pr_info("%s: Reporting insertion %d(%x),zl %d ohm,zr %d ohm\n",
+			__func__, jack_type, mbhc->hph_status,mbhc->zl, mbhc->zr);
 		wcd_mbhc_jack_report(mbhc, &mbhc->headset_jack,
 				    (mbhc->hph_status | SND_JACK_MECHANICAL),
 				    WCD_MBHC_JACK_MASK);
@@ -769,9 +779,6 @@ void wcd_mbhc_elec_hs_report_unplug(struct wcd_mbhc *mbhc)
 }
 EXPORT_SYMBOL(wcd_mbhc_elec_hs_report_unplug);
 
-void wcd_enable_mbhc_supply(struct wcd_mbhc *mbhc,
-			enum wcd_mbhc_plug_type plug_type);
-
 void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 				   enum wcd_mbhc_plug_type plug_type)
 {
@@ -799,31 +806,7 @@ void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 			wcd_mbhc_report_plug(mbhc, 0, SND_JACK_HEADPHONE);
 		if (mbhc->current_plug == MBHC_PLUG_TYPE_HEADSET)
 			wcd_mbhc_report_plug(mbhc, 0, SND_JACK_HEADSET);
-		/*
-		* calculate impedance detection
-		* If Zl and Zr > 20k then it is special accessory
-		* otherwise unsupported cable.
-		*/
-		if (mbhc->impedance_detect){
-			/* Set MUX_CTL to AUTO for Z-det */
-			mbhc->mbhc_cb->compute_impedance(mbhc,
-					&mbhc->zl, &mbhc->zr);
-			if ((mbhc->zl > 20000) && (mbhc->zr > 20000)) {
-				pr_debug("%s: special accessory \n", __func__);
-				/* Toggle switch back */
-				if (mbhc->mbhc_cfg->swap_gnd_mic &&
-				mbhc->mbhc_cfg->swap_gnd_mic(mbhc->codec,true)) {
-					pr_debug("%s: US_EU gpio present,flip switch again\n"
-						, __func__);
-				}
-			/* enable CS/MICBIAS for headset button detection to work */
-			wcd_enable_mbhc_supply(mbhc, MBHC_PLUG_TYPE_HEADSET);
-			wcd_mbhc_report_plug(mbhc, 1, SND_JACK_HEADSET);
-			}
-			else {
-			wcd_mbhc_report_plug(mbhc, 1, SND_JACK_UNSUPPORTED);
-			}
-		}
+		wcd_mbhc_report_plug(mbhc, 1, SND_JACK_UNSUPPORTED);
 	} else if (plug_type == MBHC_PLUG_TYPE_HEADSET) {
 		if (mbhc->mbhc_cfg->enable_anc_mic_detect &&
 		    mbhc->mbhc_fn->wcd_mbhc_detect_anc_plug_type)
@@ -961,6 +944,8 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 			/* make sure to turn off Rbias */
 			if (mbhc->mbhc_cb->micb_internal)
 				mbhc->mbhc_cb->micb_internal(codec, 1, false);
+			if (mbhc->mbhc_cfg->is_selfiestick)
+				mbhc->mbhc_cfg->is_selfiestick = false;
 			/* Pulldown micbias */
 			WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_PULLDOWN_CTRL, 1);
 			jack_type = SND_JACK_HEADSET;
