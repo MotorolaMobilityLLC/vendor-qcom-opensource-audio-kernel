@@ -26,6 +26,9 @@
 #define AW_MODULE_ID_COPP (0X10013D02)			/*SKT module id*/
 #define AW_MODULE_PARAMS_ID_COPP_ENABLE (0X10013D14)	/*SKT enable param id*/
 
+#define AW_IOCTL_MSG_VERSION		(0)
+
+
 #define DEFAULT_CALI_VALUE (7)
 #define ERRO_CALI_VALUE (0)
 #define AFE_PARAM_ID_AWDSP_RX_SET_ENABLE        (0x10013D11)
@@ -43,6 +46,12 @@
 #define AFE_PARAM_ID_AWDSP_RX_F0_R              (0X10013D20)
 #define AFE_PARAM_ID_AWDSP_RX_REAL_DATA_L       (0X10013D21)
 #define AFE_PARAM_ID_AWDSP_RX_REAL_DATA_R       (0X10013D22)
+#define AFE_PARAM_ID_AWDSP_RX_MSG               (0X10013D2A)
+enum {
+	AW_IOCTL_MSG_IOCTL = 0,
+	AW_IOCTL_MSG_RD_DSP,
+	AW_IOCTL_MSG_WR_DSP
+};
 
 enum {
 	AW_FIRST_ENTRY = 0,
@@ -65,9 +74,16 @@ enum AWINIC_CALI_CMD{
 	AW_CALI_CMD_MAX,
 };
 
+enum aw882xx_dsp_msg_type {
+	DSP_MSG_TYPE_DATA = 0,
+	DSP_MSG_TYPE_CMD = 1,
+};
+
 #define AW882XX_CALI_CFG_NUM 3
 #define AW882XX_CALI_DATA_NUM 6
 #define AW882XX_PARAMS_NUM 400
+#define AWINIC_DSP_MSG_HDR_VER (1)
+
 struct cali_cfg{
 	int32_t data[AW882XX_CALI_CFG_NUM];
 };
@@ -82,6 +98,23 @@ struct ptr_params_data {
 	int32_t *data;
 };
 
+typedef struct {
+	int32_t type;
+	int32_t opcode_id;
+	int32_t version;
+	int32_t data_len;
+	char *data_buf;
+	int32_t reseriver[2];
+}aw_ioctl_msg_t;
+
+struct aw_dsp_msg_hdr {
+	int32_t type;
+	int32_t opcode_id;
+	int32_t version;
+	int32_t reserver[3];
+};
+
+
 #define AW882XX_IOCTL_MAGIC                'a'
 #define AW882XX_IOCTL_SET_CALI_CFG         _IOWR(AW882XX_IOCTL_MAGIC, 1, struct cali_cfg)
 #define AW882XX_IOCTL_GET_CALI_CFG         _IOWR(AW882XX_IOCTL_MAGIC, 2, struct cali_cfg)
@@ -95,6 +128,8 @@ struct ptr_params_data {
 #define AW882XX_IOCTL_SET_PARAM            _IOWR(AW882XX_IOCTL_MAGIC, 10,struct params_data)
 #define AW882XX_IOCTL_ENABLE_CALI          _IOWR(AW882XX_IOCTL_MAGIC, 11,int8_t)
 #define AW882XX_IOCTL_SET_PTR_PARAM_NUM    _IOWR(AW882XX_IOCTL_MAGIC, 12, struct ptr_params_data)
+#define AW882XX_IOCTL_MSG                  _IOWR(AW882XX_IOCTL_MAGIC, 16, aw_ioctl_msg_t)
+
 
 enum aw882xx_init {
 	AW882XX_INIT_ST = 0,
@@ -123,6 +158,7 @@ enum aw882xx_mode_spk_rcv {
 };
 //smartpa monitor
 enum aw882xx_ipeak {
+	IPEAK_3P75_A = 0x09,
 	IPEAK_3P50_A = 0x08,
 	IPEAK_3P00_A = 0x06,
 	IPEAK_2P75_A = 0x05,
