@@ -2498,7 +2498,7 @@ static ssize_t aw882xx_temp_show(struct device *dev,
 }
 #endif
 
-static int aw_write_msg_to_dsp(int inline_id,
+static int aw_write_msg_to_dsp(struct aw882xx *aw882xx, int inline_id,
 			char *data, int data_size)
 {
 	int32_t *dsp_msg = NULL;
@@ -2520,7 +2520,8 @@ static int aw_write_msg_to_dsp(int inline_id,
 	memcpy(((char *)dsp_msg) + sizeof(struct aw_dsp_msg_hdr),
 		data, data_size);
 
-	ret = aw_send_afe_cal_apr(AFE_PARAM_ID_AWDSP_RX_MSG, (void *)dsp_msg,
+	ret = aw_send_afe_cal_apr(aw882xx->afe_rx_portid, aw882xx->afe_tx_portid,
+	            AFE_PARAM_ID_AWDSP_RX_MSG, (void *)dsp_msg,
 				sizeof(struct aw_dsp_msg_hdr) + data_size, true);
 	if (ret < 0) {
 		pr_err("%s:inline_id:0x%x, write data failed\n",
@@ -2535,7 +2536,7 @@ static int aw_write_msg_to_dsp(int inline_id,
 	return 0;
 }
 
-static int aw_read_msg_from_dsp(int inline_id,
+static int aw_read_msg_from_dsp(struct aw882xx *aw882xx, int inline_id,
 			char *data, int data_size)
 {
 	struct aw_dsp_msg_hdr dsp_msg;
@@ -2546,16 +2547,16 @@ static int aw_read_msg_from_dsp(int inline_id,
 	dsp_msg.version = AWINIC_DSP_MSG_HDR_VER;
 
 	mutex_lock(&g_msg_dsp_lock);
-	ret = aw_send_afe_cal_apr(AFE_PARAM_ID_AWDSP_RX_MSG,
-			&dsp_msg, sizeof(struct aw_dsp_msg_hdr), true);
+	ret = aw_send_afe_cal_apr(aw882xx->afe_rx_portid, aw882xx->afe_tx_portid,
+	        AFE_PARAM_ID_AWDSP_RX_MSG, &dsp_msg, sizeof(struct aw_dsp_msg_hdr), true);
 	if (ret < 0) {
 		pr_err("%s:inline_id:0x%x, write cmd to dsp failed\n",
 			__func__, inline_id);
 		goto dsp_msg_failed;
 	}
 
-	ret = aw_send_afe_cal_apr(AFE_PARAM_ID_AWDSP_RX_MSG,
-			data, data_size, false);
+	ret = aw_send_afe_cal_apr(aw882xx->afe_rx_portid, aw882xx->afe_tx_portid,
+	        AFE_PARAM_ID_AWDSP_RX_MSG, data, data_size, false);
 	if (ret < 0) {
 		pr_err("%s:inline_id:0x%x, read data from dsp failed\n",
 			__func__, inline_id);
@@ -2583,7 +2584,7 @@ static int aw_misc_ops_read_dsp(struct aw882xx *aw882xx, aw_ioctl_msg_t *msg)
 		return -ENOMEM;
 	}
 
-	ret = aw_read_msg_from_dsp(dsp_msg_id, data_ptr, data_len);
+	ret = aw_read_msg_from_dsp(aw882xx, dsp_msg_id, data_ptr, data_len);
 	if (ret) {
 		pr_err("%s : write failed\n", __func__);
 		goto exit;
@@ -2618,7 +2619,7 @@ static int aw_misc_ops_write_dsp(struct aw882xx *aw882xx, aw_ioctl_msg_t *msg)
 		goto exit;
 	}
 
-	ret = aw_write_msg_to_dsp(dsp_msg_id, data_ptr, data_len);
+	ret = aw_write_msg_to_dsp(aw882xx, dsp_msg_id, data_ptr, data_len);
 	if (ret) {
 		pr_err("%s : write failed\n", __func__);
 	}
