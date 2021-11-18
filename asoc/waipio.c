@@ -1918,7 +1918,6 @@ void msm_common_set_pdata(struct snd_soc_card *card,
 	pdata->common_pdata = common_pdata;
 }
 
-<<<<<<< HEAD
 static int msm_asoc_parse_soundcard_name(struct platform_device *pdev,
 					 struct snd_soc_card *card)
 {
