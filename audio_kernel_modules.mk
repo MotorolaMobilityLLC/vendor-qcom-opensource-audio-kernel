@@ -72,7 +72,6 @@ AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/q6_notifier_dlkm.ko\
 	$(KERNEL_MODULES_OUT)/tx_macro_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/rx_macro_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wsa881x_analog_dlkm.ko \
-	$(KERNEL_MODULES_OUT)/aw882xx_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wcd937x_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wcd937x_slave_dlkm.ko
 endif	# bengal
