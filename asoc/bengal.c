@@ -579,7 +579,7 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.ops = &msm_common_be_ops,
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
-		SND_SOC_DAILINK_REG(pri_mi2s_rx),
+		SND_SOC_DAILINK_REG(pri_mi2s_rx_aw882xx),
 	},
 	{
 		.name = LPASS_BE_PRI_MI2S_TX,
@@ -589,7 +589,7 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 			SND_SOC_DPCM_TRIGGER_POST},
 		.ops = &msm_common_be_ops,
 		.ignore_suspend = 1,
-		SND_SOC_DAILINK_REG(pri_mi2s_tx),
+		SND_SOC_DAILINK_REG(pri_mi2s_tx_aw882xx),
 	},
 	{
 		.name = LPASS_BE_SEC_MI2S_RX,
