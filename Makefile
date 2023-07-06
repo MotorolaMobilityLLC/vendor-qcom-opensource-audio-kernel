@@ -1,3 +1,4 @@
+ifneq ($(TARGET_SUPPORT),)
 ifeq ($(TARGET_SUPPORT), lemans)
 KBUILD_OPTIONS := CONFIG_SND_SOC_AUTO=y
 KBUILD_OPTIONS += CONFIG_SND_SOC_SA8255=m
@@ -54,7 +55,7 @@ all:
 
 modules_install:
 	$(MAKE) INSTALL_MOD_STRIP=1 -C $(KERNEL_SRC) M=$(M) modules_install
-
+endif
 else
 
 M=$(PWD)
