@@ -640,6 +640,8 @@ static int wcd_mbhc_get_plug_from_adc(struct wcd_mbhc *mbhc, int adc_result)
 	hs_thr = wcd_mbhc_adc_get_hs_thres(mbhc);
 	hph_thr = wcd_mbhc_adc_get_hph_thres(mbhc);
 
+	pr_info("%s,adc_result=%d,hs_thr=%d,hph_thr=%d",__func__, adc_result,hs_thr,hph_thr);
+
 	if (adc_result < hph_thr)
 		plug_type = MBHC_PLUG_TYPE_HEADPHONE;
 	else if (adc_result > hs_thr)
@@ -689,7 +691,7 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 
 	if (cross_conn > 0) {
 		plug_type = MBHC_PLUG_TYPE_GND_MIC_SWAP;
-		pr_debug("%s: cross connection found, Plug type %d\n",
+		pr_info("%s: cross connection found, Plug type %d\n",
 			 __func__, plug_type);
 		goto correct_plug_type;
 	}
