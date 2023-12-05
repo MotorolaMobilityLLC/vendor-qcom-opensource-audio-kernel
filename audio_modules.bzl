@@ -410,6 +410,20 @@ audio_modules.register(
     config_option = "CONFIG_SND_SOC_WCD937X_SLAVE",
     srcs = ["wcd937x_slave.c"]
 )
+# >>>> FS1815 MODULES <<<<
+audio_modules.register(
+    name = "fs1815_dlkm",
+    path = ASOC_CODECS_PATH + "/fs1815",
+    config_option = "CONFIG_SND_SOC_FS1815",
+    srcs = [
+        "fsm_i2c.c",
+        "fs1815.c",
+        "fsm_core.c",
+        "fsm_misc.c",
+        "fsm_sysfs.c",
+        "fsm_firmware.c",
+    ]
+)
 # >>>> WCD938X MODULES <<<<
 audio_modules.register(
     name = "wcd938x_dlkm",

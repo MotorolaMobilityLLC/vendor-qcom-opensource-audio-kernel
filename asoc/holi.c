@@ -43,6 +43,9 @@
 #include "msm_common.h"
 #include "msm_holi_dailink.h"
 
+#ifdef CONFIG_SND_SOC_FS1815
+extern int fsm_add_codec_controls(struct snd_soc_component *codec);
+#endif
 #define DRV_NAME "holi-asoc-snd"
 #define __CHIPSET__ "HOLI "
 #define MSM_DAILINK_NAME(name) (__CHIPSET__#name)
@@ -1364,6 +1367,14 @@ static int msm_rx_tx_codec_init(struct snd_soc_pcm_runtime *rtd)
 
 	dapm = snd_soc_component_get_dapm(component);
 	card = component->card->snd_card;
+#ifdef CONFIG_SND_SOC_FS1815
+	ret = fsm_add_codec_controls(component);
+	 if (ret < 0) {
+		 dev_err(component->dev,
+				 "%s: Failed to add fs1815 ctrls for codec: %d\n",
+				 __func__, ret);
+	 }
+#endif
 
 	pdata = snd_soc_card_get_drvdata(component->card);
 	if (!pdata)

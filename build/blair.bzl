@@ -34,6 +34,7 @@ def define_blair():
             "wcd937x_slave_dlkm",
             "wcd938x_dlkm",
             "wcd938x_slave_dlkm",
+            "fs1815_dlkm",
         ],
         config_options = [
             "CONFIG_SND_SOC_HOLI",
@@ -46,5 +47,6 @@ def define_blair():
             "CONFIG_SND_SOC_WCD_IRQ",
             "CONFIG_SND_SOC_WCD9XXX_V2",
             "CONFIG_SND_SOC_WCD_MBHC_ADC",
+            "CONFIG_SND_SOC_FS1815",
         ]
     )

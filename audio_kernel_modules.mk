@@ -71,6 +71,9 @@ AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/bolero_cdc_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wcd937x_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wcd937x_slave_dlkm.ko
 endif
+ifeq ($(call is-board-platform-in-list,blair), true)
+AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/fs1815_dlkm.ko
+endif
 ifeq ($(call is-board-platform-in-list, holi blair), true)
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/wcd938x_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/wcd938x_slave_dlkm.ko
