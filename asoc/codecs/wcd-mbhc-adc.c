@@ -686,7 +686,7 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 
 	if (cross_conn > 0) {
 		plug_type = MBHC_PLUG_TYPE_GND_MIC_SWAP;
-		pr_debug("%s: cross connection found, Plug type %d\n",
+		pr_info("%s: cross connection found, Plug type %d\n",
 			 __func__, plug_type);
 		goto correct_plug_type;
 	}
