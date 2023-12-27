@@ -219,6 +219,8 @@ static struct snd_soc_card snd_soc_card_holi_msm;
 static int dmic_0_1_gpio_cnt;
 static int dmic_2_3_gpio_cnt;
 static int dmic_4_5_gpio_cnt;
+static bool is_hac_enable;
+static int hac_enable_pin;
 
 static void *def_wcd_mbhc_cal(void);
 
@@ -250,6 +252,56 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.anc_micbias = MIC_BIAS_2,
 	.enable_anc_mic_detect = false,
 	.moisture_duty_cycle_en = true,
+};
+
+static const char *const hac_enable_text[] = {"Off", "On"};
+static SOC_ENUM_SINGLE_EXT_DECL(hac_enable, hac_enable_text);
+
+static int hac_enable_get(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = is_hac_enable;
+	return 0;
+}
+
+static int hac_enable_set(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	int hac_mode = 1;
+	if (hac_enable_pin < 0) {
+		pr_err("%s: hac enable pin gpio is NULL\n", __func__);
+		return -EINVAL;
+	}
+	switch (ucontrol->value.integer.value[0]) {
+		case 0:
+			gpio_direction_output(hac_enable_pin, 0);
+			is_hac_enable = 0;
+			break;
+		case 1:
+			while(hac_mode > 0){
+				if (gpio_is_valid(hac_enable_pin)) {
+					pr_debug("%s: hac gpio exist\n", __func__);
+					gpio_direction_output(hac_enable_pin, 0);
+					udelay(3);
+					gpio_direction_output(hac_enable_pin, 1);
+					udelay(3);
+					hac_mode--;
+				} else {
+					pr_err("%s: hac gpio not exist\n", __func__);
+					return 0;
+				}
+			}
+			is_hac_enable = 1;
+			break;
+		default:
+			return -EINVAL;
+	}
+	return 0;
+}
+
+static const struct snd_kcontrol_new msm_snd_hac_controls[] = {
+	SOC_ENUM_EXT("HAC Enable", hac_enable, hac_enable_get,
+			hac_enable_set),
 };
 
 struct msm_common_pdata *msm_common_get_pdata(struct snd_soc_card *card)
@@ -1375,6 +1427,12 @@ static int msm_rx_tx_codec_init(struct snd_soc_pcm_runtime *rtd)
 				 __func__, ret);
 	 }
 #endif
+	ret = snd_soc_add_component_controls(component, msm_snd_hac_controls,
+				   ARRAY_SIZE(msm_snd_hac_controls));
+	if (ret < 0) {
+		pr_err("%s: add hac controls failed: %d\n",
+			__func__, ret);
+	}
 
 	pdata = snd_soc_card_get_drvdata(component->card);
 	if (!pdata)
@@ -1668,6 +1726,15 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	}
 	dev_info(&pdev->dev, "%s: Sound card %s registered\n",
 		 __func__, card->name);
+
+	hac_enable_pin = of_get_named_gpio(pdev->dev.of_node,
+			"qcom,hac_enable", 0);
+	if (hac_enable_pin < 0) {
+		pr_err("missing %d in dt node\n", hac_enable_pin);
+	}
+	if (!gpio_is_valid(hac_enable_pin)) {
+		pr_err("Invalid hac_enable gpio: %d", hac_enable_pin);
+	}
 
 	pdata->hph_en1_gpio_p = of_parse_phandle(pdev->dev.of_node,
 						"qcom,hph-en1-gpio", 0);
