@@ -384,13 +384,13 @@ SND_SOC_DAILINK_DEFS(tavil_i2s_tx1,
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(quin_mi2s_rx_cusco_fs19xx,
-	DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
-	DAILINK_COMP_ARRAY(COMP_CODEC("fs16xx.0-0034", "fs16xx-aif")),
-	DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
+        DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
+        DAILINK_COMP_ARRAY(COMP_CODEC("fs16xx_0", "fs16xx-aif")),
+        DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(quin_mi2s_tx_cusco_fs19xx,
         DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
-        DAILINK_COMP_ARRAY(COMP_CODEC("fs16xx.0-0034", "fs16xx-aif")),
+        DAILINK_COMP_ARRAY(COMP_CODEC("fs16xx_0", "fs16xx-aif")),
         DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(quin_mi2s_rx_aw882xx,
