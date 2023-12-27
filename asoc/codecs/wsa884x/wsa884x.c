@@ -845,9 +845,9 @@ static int wsa_dev_mode_put(struct snd_kcontrol *kcontrol,
 }
 
 static const char * const wsa_pa_gain_text[] = {
-	"G_21_DB", "G_19P5_DB" "G_18_DB", "G_16P5_DB", "G_15_DB", "G_13P5_DB",
+	"G_21_DB", "G_19P5_DB", "G_18_DB", "G_16P5_DB", "G_15_DB", "G_13P5_DB",
 	"G_12_DB", "G_10P5_DB", "G_9_DB", "G_7P5_DB", "G_6_DB", "G_4P5_DB",
-	"G_3_DB", "G_1P5_DB", "G_0_DB", "G_M1P5_DB", "G_M3_DB", "G_M4P5_DB"
+	"G_3_DB", "G_1P5_DB", "G_0_DB", "G_M1P5_DB", "G_M3_DB", "G_M4P5_DB",
 	"G_M6_DB", "G_M7P5_DB", "G_M9_DB"
 };
 
@@ -880,7 +880,11 @@ static int wsa_pa_gain_put(struct snd_kcontrol *kcontrol,
 		__func__, ucontrol->value.integer.value[0]);
 
 	wsa884x->pa_gain =  ucontrol->value.integer.value[0];
-
+	if (!wsa884x->comp_enable) {
+		dev_dbg(component->dev, "%s: comp disable, dynamically set pa gain\n",__func__);
+		snd_soc_component_update_bits(component,
+			REG_FIELD_VALUE(DRE_CTL_1, CSR_GAIN, wsa884x->pa_gain));
+	}
 	return 0;
 }
 
