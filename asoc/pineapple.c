@@ -99,6 +99,7 @@ struct msm_asoc_mach_data {
 	int wcd_used;
 };
 
+static int dmic_micbias_cnt;
 static bool is_initial_boot;
 static bool codec_reg_done;
 static struct snd_soc_card snd_soc_card_pineapple_msm;
@@ -393,12 +394,17 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
 		if (pdata->dmic_micbias_gpio_p) {
-			ret = msm_cdc_pinctrl_select_active_state(
-						pdata->dmic_micbias_gpio_p);
-			if (ret < 0) {
-				pr_err_ratelimited("%s: micbias gpio set cannot be activated %sd",
-					__func__, "pdata->dmic_micbias_gpio_p");
-				return ret;
+			dmic_micbias_cnt++;
+			dev_dbg(component->dev, "%s: dmic_micbias_cnt %d\n", __func__, dmic_micbias_cnt);
+			if (dmic_micbias_cnt == 1) {
+				dev_info(component->dev, "%s: enable micbias\n", __func__);
+				ret = msm_cdc_pinctrl_select_active_state(
+							pdata->dmic_micbias_gpio_p);
+				if (ret < 0) {
+					pr_err_ratelimited("%s: micbias gpio set cannot be activated %sd",
+						__func__, "pdata->dmic_micbias_gpio_p");
+					return ret;
+				}
 			}
 		}
 		(*dmic_gpio_cnt)++;
@@ -415,12 +421,17 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		if (pdata->dmic_micbias_gpio_p) {
-			ret = msm_cdc_pinctrl_select_sleep_state(
-						pdata->dmic_micbias_gpio_p);
-			if (ret < 0) {
-				pr_err_ratelimited("%s: micbias gpio set cannot be de-activated %sd",
-					__func__, "pdata->dmic_micbias_gpio_p");
-				return ret;
+			dmic_micbias_cnt--;
+			dev_dbg(component->dev, "%s: dmic_micbias_cnt %d\n", __func__, dmic_micbias_cnt);
+			if (dmic_micbias_cnt == 0) {
+				dev_info(component->dev, "%s: disable micbias\n", __func__);
+				ret = msm_cdc_pinctrl_select_sleep_state(
+							pdata->dmic_micbias_gpio_p);
+				if (ret < 0) {
+					pr_err_ratelimited("%s: micbias gpio set cannot be de-activated %sd",
+						__func__, "pdata->dmic_micbias_gpio_p");
+					return ret;
+				}
 			}
 		}
 		(*dmic_gpio_cnt)--;
