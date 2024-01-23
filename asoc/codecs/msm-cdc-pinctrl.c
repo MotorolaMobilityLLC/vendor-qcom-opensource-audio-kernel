@@ -226,6 +226,7 @@ static int msm_cdc_pinctrl_probe(struct platform_device *pdev)
 	u32 i = 0, temp = 0;
 	int count = 0;
 
+	dev_info(&pdev->dev, "%s: enter\n", __func__);
 	gpio_data = devm_kzalloc(&pdev->dev,
 				 sizeof(struct msm_cdc_pinctrl_info),
 				 GFP_KERNEL);
@@ -334,6 +335,7 @@ cdc_rst:
 		}
 	}
 
+	dev_info(&pdev->dev, "%s: gpio_data %p\n", __func__, gpio_data);
 	dev_set_drvdata(&pdev->dev, gpio_data);
 	return 0;
 
@@ -341,6 +343,7 @@ err_lookup_state:
 	devm_pinctrl_put(gpio_data->pinctrl);
 err_pctrl_get:
 	devm_kfree(&pdev->dev, gpio_data);
+	dev_err(&pdev->dev, "%s: exit, ret = %d\n", __func__, ret);
 	return ret;
 }
 

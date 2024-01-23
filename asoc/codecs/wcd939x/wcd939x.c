@@ -4680,6 +4680,7 @@ static int wcd939x_reset(struct device *dev)
 	int rc = 0;
 	int value = 0;
 
+	pr_info("%s: enter\n", __func__);
 	if (!dev)
 		return -ENODEV;
 
@@ -4694,8 +4695,10 @@ static int wcd939x_reset(struct device *dev)
 	}
 
 	value = msm_cdc_pinctrl_get_state(wcd939x->rst_np);
-	if (value > 0)
+	if (value > 0) {
+		pr_info("%s: msm_cdc_pinctrl_get_state return %d", __func__, value);
 		return 0;
+	}
 
 	/* Set OVP threshold to 4.0V before reset */
 #if IS_ENABLED(CONFIG_QCOM_WCD_USBSS_I2C)
@@ -4725,6 +4728,7 @@ static int wcd939x_reset(struct device *dev)
 	wcd_usbss_set_ovp_threshold(VTH_4P2);
 #endif
 
+	pr_info("%s: exit, rc = %d\n", __func__, rc);
 	return rc;
 }
 
@@ -5497,7 +5501,11 @@ static int wcd939x_probe(struct platform_device *pdev)
 	if (ret)
 		goto err_lock_init;
 
-	wcd939x_reset(dev);
+	ret = wcd939x_reset(dev);
+	if (ret) {
+		dev_err(dev, "wcd939x_reset return %d\n", ret);
+		return -EPROBE_DEFER;
+	}
 
 	wcd939x->wakeup = wcd939x_wakeup;
 
