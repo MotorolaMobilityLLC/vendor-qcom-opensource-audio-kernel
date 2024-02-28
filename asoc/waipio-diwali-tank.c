@@ -62,6 +62,12 @@
 #define STEREO_SPEAKER  2
 #define QUAD_SPEAKER    4
 
+/* State of Receiver NS Enable */
+#define RCV_NS_STATE_ENABLE 1
+#define RCV_NS_STATE_DISABLE 0
+#define RCV_NS_PIN_HIGH 1
+#define RCV_NS_PIN_LOW 0
+
 struct msm_asoc_mach_data {
 	struct snd_info_entry *codec_root;
 	struct msm_common_pdata *common_pdata;
@@ -87,6 +93,8 @@ static struct snd_soc_card snd_soc_card_waipio_msm;
 static int dmic_0_1_gpio_cnt;
 static int dmic_2_3_gpio_cnt;
 static int dmic_4_5_gpio_cnt;
+static bool is_rcv_ns_enable;
+static int rcv_ns_enable_pin;
 
 static void *def_wcd_mbhc_cal(void);
 
@@ -118,6 +126,40 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.anc_micbias = MIC_BIAS_2,
 	.enable_anc_mic_detect = false,
 	.moisture_duty_cycle_en = true,
+};
+
+static const char *rcv_ns_enable_text[] = {"Off", "On"};
+static SOC_ENUM_SINGLE_EXT_DECL(rcv_ns_enable, rcv_ns_enable_text);
+
+static int rcv_ns_enable_get(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_value *ucontrol) {
+	ucontrol->value.integer.value[0] = is_rcv_ns_enable;
+
+	return 0;
+}
+static int rcv_ns_enable_set(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_value *ucontrol) {
+	switch (ucontrol->value.integer.value[0]) {
+	case RCV_NS_STATE_DISABLE:
+		gpio_direction_output(rcv_ns_enable_pin, RCV_NS_PIN_HIGH);
+		is_rcv_ns_enable = RCV_NS_STATE_DISABLE;
+		pr_info("%s: set rcv_ns_enable_pin high\n", __func__);
+		break;
+	case RCV_NS_STATE_ENABLE:
+		gpio_direction_output(rcv_ns_enable_pin, RCV_NS_PIN_LOW);
+		is_rcv_ns_enable = RCV_NS_STATE_ENABLE;
+		pr_info("%s: set rcv_ns_enable_pin low\n", __func__);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static const struct snd_kcontrol_new msm_snd_rcv_ns_controls[] = {
+	SOC_ENUM_EXT("Receiver NS Enable", rcv_ns_enable, rcv_ns_enable_get,
+			rcv_ns_enable_set),
 };
 
 static bool msm_usbc_swap_gnd_mic(struct snd_soc_component *component, bool active)
@@ -167,6 +209,15 @@ static void msm_parse_upd_configuration(struct platform_device *pdev,
 	if (ret) {
 		pr_debug("%s: could not find %s entry in dt\n",
 			__func__, "qcom,upd_ear_pa_reg_addr");
+	}
+
+	rcv_ns_enable_pin = of_get_named_gpio(pdev->dev.of_node,
+						     "qcom,rcv_ns_enable", 0);
+	if (rcv_ns_enable_pin < 0) {
+		pr_err("missing %d in dt node\n", rcv_ns_enable_pin);
+	}
+	if (!gpio_is_valid(rcv_ns_enable_pin)) {
+		pr_err("Invalid rcv_ns_enable_pin gpio: %d", rcv_ns_enable_pin);
 	}
 }
 
@@ -1332,6 +1383,13 @@ static int msm_snd_card_late_probe(struct snd_soc_card *card)
 			__func__, ret);
 		goto err_hs_detect;
 	}
+	ret = snd_soc_add_component_controls(component, msm_snd_rcv_ns_controls,
+				   ARRAY_SIZE(msm_snd_rcv_ns_controls));
+	if (ret < 0) {
+		dev_err(component->dev, "%s: Failed to add snd_rcv_ns_controls\n", __func__);
+		return ret;
+	}
+
 	return 0;
 
 err_hs_detect:
