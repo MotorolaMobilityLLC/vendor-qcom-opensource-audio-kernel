@@ -1657,6 +1657,10 @@ static int wsa884x_get_temperature(struct snd_soc_component *component,
 					   __func__, reg.d1_msb, reg.d1_lsb, reg.d2_msb,
 					   reg.d2_lsb);
 		}
+
+		pr_info("%s: Temperature registers are [%d %d %d %d] and dmeas is %d, %d\n",
+			__func__, reg.d1_msb, reg.d1_lsb, reg.d2_msb,
+			reg.d2_lsb, reg.dmeas_msb, reg.dmeas_lsb);
 		dmeas = ((reg.dmeas_msb << 0x8) | reg.dmeas_lsb) >> 0x6;
 		d1 = ((reg.d1_msb << 0x8) | reg.d1_lsb) >> 0x6;
 		d2 = ((reg.d2_msb << 0x8) | reg.d2_lsb) >> 0x6;
@@ -1680,7 +1684,7 @@ static int wsa884x_get_temperature(struct snd_soc_component *component,
 	wsa884x->curr_temp = temp_val;
 	if (temp)
 		*temp = temp_val;
-	pr_debug("%s: t0 measured: %d dmeas = %d, d1 = %d, d2 = %d\n",
+	pr_info("%s: t0 measured: %d dmeas = %d, d1 = %d, d2 = %d\n",
 		  __func__, temp_val, dmeas, d1, d2);
 
 	return ret;
