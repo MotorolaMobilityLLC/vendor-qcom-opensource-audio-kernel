@@ -815,10 +815,10 @@ void wcd_mbhc_elec_hs_report_unplug(struct wcd_mbhc *mbhc)
 						&mbhc->correct_plug_swch);
 	else
 		pr_info("%s: hs_detect_plug work not cancelled\n", __func__);
-
-	pr_info("%s: Report extension cable\n", __func__);
+#if 0  /* don't need to report lineout */
 	wcd_mbhc_report_plug(mbhc, 1, SND_JACK_LINEOUT);
 	extcon_set_state_sync(mbhc->extdev, EXTCON_JACK_LINE_OUT, 1);
+#endif
 	/*
 	 * If PA is enabled HPHL schmitt trigger can
 	 * be unreliable, make sure to disable it
