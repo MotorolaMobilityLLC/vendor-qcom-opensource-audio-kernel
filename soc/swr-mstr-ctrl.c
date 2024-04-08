@@ -1431,8 +1431,13 @@ static void swrm_get_device_frame_shape(struct swr_mstr_ctrl *swrm,
 					port_req->slave_port_id;
 		if (port_id_offset >= SWR_MAX_MSTR_PORT_NUM)
 			return;
-		port_req->sinterval =
+#ifdef CONFIG_MALMO_MIC_20K
+                port_req->sinterval =
+				((swrm->mclk_freq * 2) / port_req->ch_rate) - 1;
+#else
+                port_req->sinterval =
 				((swrm->bus_clk * 2) / port_req->ch_rate) - 1;
+#endif
 		port_req->offset1 = swrm->pp[uc][port_id_offset].offset1;
 		port_req->offset2 = 0x00;
 		port_req->hstart = 0xFF;
@@ -1894,7 +1899,11 @@ static int swrm_connect_port(struct swr_master *master,
 			port_req->dev_num = portinfo->dev_num;
 			port_req->slave_port_id = portinfo->port_id[i];
 			port_req->num_ch = portinfo->num_ch[i];
-			port_req->ch_rate = portinfo->ch_rate[i];
+#ifdef CONFIG_MALMO_MIC_20K
+                        port_req->ch_rate = 4800000;
+#else
+                        port_req->ch_rate = portinfo->ch_rate[i];
+#endif
 			port_req->ch_en = 0;
 			port_req->master_port_id = mstr_port_id;
 			list_add(&port_req->list, &mport->port_req_list);

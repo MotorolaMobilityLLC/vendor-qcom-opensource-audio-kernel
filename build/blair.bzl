@@ -48,5 +48,6 @@ def define_blair():
             "CONFIG_SND_SOC_WCD9XXX_V2",
             "CONFIG_SND_SOC_WCD_MBHC_ADC",
             "CONFIG_SND_SOC_FS1815",
+            "CONFIG_MALMO_MIC_20K",
         ]
     )
