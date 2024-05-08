@@ -407,6 +407,17 @@ LOCAL_ADDITIONAL_DEPENDENCIES := $(call intermediates-dir-for,DLKM,msm-ext-disp-
 include $(DLKM_DIR)/Build_external_kernelmodule.mk
 #endif
 
+########################### AW87xxx PA ################################
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES           := $(AUDIO_SRC_FILES)
+LOCAL_MODULE              := aw87xxx_dlkm.ko
+LOCAL_MODULE_KBUILD_NAME  := asoc/codecs/aw87xxx/aw87xxx_dlkm.ko
+LOCAL_MODULE_TAGS         := optional
+LOCAL_MODULE_DEBUG_ENABLE := true
+LOCAL_MODULE_PATH         := $(KERNEL_MODULES_OUT)
+include $(DLKM_DIR)/Build_external_kernelmodule.mk
+###########################################################
+
 ########################### fs19xx PA ################################
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES           := $(AUDIO_SRC_FILES)
