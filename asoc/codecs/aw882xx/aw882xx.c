@@ -756,6 +756,17 @@ static int aw882xx_volume_put(struct snd_kcontrol *kcontrol,
 	compared_vol = AW_GET_MAX_VALUE(vol_desc->ctl_volume,
 						vol_desc->monitor_volume);
 
+	// here we assume speakerhelper will set value bigger than 100 when
+	// ramp started, and set 0 when ramp ended. If it's not true, pls
+	// don't use ramp_in_process for any logic control
+	if ((value > 100) && (aw882xx->aw_pa->ramp_in_process == 0)){
+		aw_dev_info(aw882xx->dev, "ramp started");
+		aw882xx->aw_pa->ramp_in_process = 1;
+	} else if ((value == 0) && (aw882xx->aw_pa->ramp_in_process == 1)){
+		aw_dev_info(aw882xx->dev, "ramp finished");
+		aw882xx->aw_pa->ramp_in_process = 0;
+	}
+
 	aw882xx_dev_set_volume(aw882xx->aw_pa, compared_vol);
 
 	return 0;
@@ -1782,6 +1793,26 @@ static int aw882xx_parse_gpio_dt(struct aw882xx *aw882xx,
 	return 0;
 }
 
+static void aw882xx_parse_fade_enable_dt(struct aw882xx *aw882xx)
+{
+	int ret = -1;
+	uint32_t fade_en;
+	struct device_node *np = aw882xx->dev->of_node;
+
+	ret = of_property_read_u32(np, "fade-enable", &fade_en);
+	if (ret < 0) {
+		aw_dev_info(aw882xx->dev,
+			"%s:read fade-enable failed, use default: 0\n",
+			__func__);
+		fade_en = AW88X22_FADE_IN_DEFAULT;
+	} else {
+		aw_dev_info(aw882xx->dev, "%s:read fade-enable value is: %d\n",
+			__func__, fade_en);
+	}
+
+	aw882xx->aw_pa->fade_en = fade_en;
+}
+
 static struct aw882xx *aw882xx_malloc_init(struct i2c_client *i2c)
 {
 	struct aw882xx *aw882xx = devm_kzalloc(&i2c->dev, sizeof(struct aw882xx), GFP_KERNEL);
@@ -1862,6 +1893,9 @@ static int aw882xx_parse_dt(struct device *dev, struct aw882xx *aw882xx,
 	ret = aw882xx_parse_gpio_dt(aw882xx, np);
 	if (ret)
 		return ret;
+
+	/* fade-enable dts parse */
+	aw882xx_parse_fade_enable_dt(aw882xx);
 
 	ret = of_property_read_u32(np, "dc-flag", &dc_enable);
 	if (ret) {

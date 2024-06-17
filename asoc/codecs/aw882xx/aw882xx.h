@@ -14,7 +14,7 @@
 #define AW882XX_DC_DELAY_TIME	(1000)
 #define AW882XX_LOAD_FW_DELAY_TIME	(0)
 #define AW_START_RETRIES	(5)
-
+#define AW88X22_FADE_IN_DEFAULT  (1)
 #define AW_PID_2055_VERSION_DIFF_REG	(0x23)
 
 #define AW_I2C_RETRIES			5	/* 5 times */

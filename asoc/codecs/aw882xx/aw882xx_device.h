@@ -282,11 +282,14 @@ struct aw_device {
 	unsigned int vol_step;
 	unsigned int re_max;
 	unsigned int re_min;
+	unsigned int fade_en;
 
 	struct device *dev;
 	struct i2c_client *i2c;
 	char monitor_name[AW_NAME_MAX];
 	void *private_data;
+
+	int ramp_in_process;
 
 	struct aw_int_desc int_desc;
 	struct aw_work_mode work_mode;

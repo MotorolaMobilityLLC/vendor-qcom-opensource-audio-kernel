@@ -420,6 +420,14 @@ static void aw_dev_fade_in(struct aw_device *aw_dev)
 	struct aw_volume_desc *desc = &aw_dev->volume_desc;
 	int fade_in_vol = desc->ctl_volume;
 
+	if (!aw_dev->fade_en) {
+		if (aw_dev->ramp_in_process == 0) {
+			aw882xx_dev_set_volume(aw_dev, fade_in_vol);
+		} else
+			aw_dev_info(aw_dev->dev,"don't restore volume as ramp in process and fade disabled");
+		return;
+	}
+
 	if (fade_step == 0 || g_fade_in_time == 0) {
 		aw882xx_dev_set_volume(aw_dev, fade_in_vol);
 		return;
@@ -1166,6 +1174,8 @@ int aw882xx_device_probe(struct aw_device *aw_dev)
 	mutex_lock(&g_dev_lock);
 	list_add(&aw_dev->list_node, &g_dev_list);
 	mutex_unlock(&g_dev_lock);
+
+	aw_dev->ramp_in_process = 0;
 
 	return 0;
 }
