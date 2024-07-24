@@ -2030,18 +2030,18 @@ static int tfa98xx_append_i2c_address(struct device *dev,
 	int addr = i2c->addr;
 	if (dai_drv && num_dai > 0)
 		for (i = 0; i < num_dai; i++) {
-			snprintf(buf, 50, "%s-%d-%x", dai_drv[i].name, i2cbus,
+			snprintf(buf, 50, "%s-%x", dai_drv[i].name,
 				addr);                                              //modify by mono for DEC 20231030
 			dai_drv[i].name = tfa98xx_devm_kstrdup(dev, buf);
 
-			snprintf(buf, 50, "%s-%d-%x",
+			snprintf(buf, 50, "%s-%x",
 				dai_drv[i].playback.stream_name,
-				i2cbus, addr);                                      //modify by mono for DEC 20231030
+				addr);                                      //modify by mono for DEC 20231030
 			dai_drv[i].playback.stream_name = tfa98xx_devm_kstrdup(dev, buf);
 
-			snprintf(buf, 50, "%s-%d-%x",
+			snprintf(buf, 50, "%s-%x",
 				dai_drv[i].capture.stream_name,
-				i2cbus, addr);                                      //modify by mono for DEC 20231030
+				addr);                                      //modify by mono for DEC 20231030
 			dai_drv[i].capture.stream_name = tfa98xx_devm_kstrdup(dev, buf);
 		}
 
