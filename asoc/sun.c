@@ -80,6 +80,7 @@ struct msm_asoc_mach_data {
 	struct device_node *dmic23_gpio_p; /* used by pinctrl API */
 	struct device_node *dmic45_gpio_p; /* used by pinctrl API */
 	struct device_node *dmic67_gpio_p; /* used by pinctrl API */
+	struct device_node *dmic_micbias_gpio_p; /* used by pinctrl API */
 	struct pinctrl *usbc_en2_gpio_p; /* used by pinctrl API */
 	bool is_afe_config_done;
 	struct device_node *wcd_usbss_handle;
@@ -94,6 +95,7 @@ struct msm_asoc_mach_data {
 	int wcd_used;
 };
 
+static int dmic_micbias_cnt;
 static bool is_initial_boot;
 static bool codec_reg_done;
 static struct snd_soc_card snd_soc_card_sun_msm;
