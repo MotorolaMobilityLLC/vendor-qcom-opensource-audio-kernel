@@ -2026,7 +2026,6 @@ static int tfa98xx_append_i2c_address(struct device *dev,
 {
 	char buf[50];
 	int i;
-	int i2cbus = i2c->adapter->nr;
 	int addr = i2c->addr;
 	if (dai_drv && num_dai > 0)
 		for (i = 0; i < num_dai; i++) {
@@ -2056,8 +2055,7 @@ static int tfa98xx_append_i2c_address(struct device *dev,
 				continue;
 			if ((widgets[i].id == snd_soc_dapm_aif_in)
 				|| (widgets[i].id == snd_soc_dapm_aif_out)) {
-				snprintf(buf, 50, "%s-%d-%x", widgets[i].sname,
-					i2cbus, addr);                                  //modify by mono for DEC 20231030
+				snprintf(buf, 50, "%s-%x", widgets[i].sname, addr);                                  //modify by mono for DEC 20231030
 				widgets[i].sname = tfa98xx_devm_kstrdup(dev, buf);
 			}
 		}
