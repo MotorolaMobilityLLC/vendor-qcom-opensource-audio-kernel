@@ -108,7 +108,7 @@ HW TDM Setting in the container file in case of dynamic sample format seletcion*
 module_param(pcm_sample_format, int, S_IRUGO);
 MODULE_PARM_DESC(pcm_sample_format, "PCM sample format: 0=S16_LE, 1=S24_LE, 2=S32_LE, 3=dynamic\n");
 
-static int pcm_no_constraint = 0;                       //modify by mono for start up 20231103
+static int pcm_no_constraint = 2;                       //modify by mono for start up 20231103
 module_param(pcm_no_constraint, int, S_IRUGO);
 MODULE_PARM_DESC(pcm_no_constraint, "do not use constraints for PCM parameters\n");
 
