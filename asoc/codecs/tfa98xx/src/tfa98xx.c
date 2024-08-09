@@ -1836,6 +1836,82 @@ static int tfa98xx_get_cal_ctl(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static uint32_t tfa98xx_miid = 0;
+static int tfa98xx_info_miid(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_info *uinfo)
+{
+	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
+	mutex_lock(&tfa98xx_mutex);
+	uinfo->count = 1;
+	mutex_unlock(&tfa98xx_mutex);
+	uinfo->value.integer.min = 0;
+	uinfo->value.integer.max = 0xffffffff; /* 16 bit value */
+
+	return 0;
+}
+
+static int tfa98xx_get_miid(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	mutex_lock(&tfa98xx_mutex);
+
+	ucontrol->value.integer.value[0] = tfa98xx_miid;
+
+	mutex_unlock(&tfa98xx_mutex);
+
+	return 0;
+}
+
+static int tfa98xx_set_miid(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	mutex_lock(&tfa98xx_mutex);
+
+	tfa98xx_miid = (uint32_t)ucontrol->value.integer.value[0];
+
+	mutex_unlock(&tfa98xx_mutex);
+
+	return 1;
+}
+
+static uint32_t tfa98xx_pcm_id = 0;
+static int tfa98xx_info_pcm_id(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_info *uinfo)
+{
+	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
+	mutex_lock(&tfa98xx_mutex);
+	uinfo->count = 1;
+	mutex_unlock(&tfa98xx_mutex);
+	uinfo->value.integer.min = 0;
+	uinfo->value.integer.max = 0xffffffff; /* 16 bit value */
+
+	return 0;
+}
+
+static int tfa98xx_get_pcm_id(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	mutex_lock(&tfa98xx_mutex);
+
+	ucontrol->value.integer.value[0] = tfa98xx_pcm_id;
+
+	mutex_unlock(&tfa98xx_mutex);
+
+	return 0;
+}
+
+static int tfa98xx_set_pcm_id(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	mutex_lock(&tfa98xx_mutex);
+
+	tfa98xx_pcm_id = (uint32_t)ucontrol->value.integer.value[0];
+
+	mutex_unlock(&tfa98xx_mutex);
+
+	return 1;
+}
+
 static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 {
 	int prof, nprof, mix_index = 0;
@@ -1849,7 +1925,7 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 	 *  - Stop control on TFA1 devices
 	 */
 
-	nr_controls = 5; /* Profile and stop control and Algo Bypass */
+	nr_controls = 7; /* Profile and stop control and Algo Bypass */
 
 	if (tfa98xx->flags & TFA98XX_FLAG_CALIBRATION_CTL)
 		nr_controls += 1; /* calibration */
@@ -1999,6 +2075,19 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 		mix_index++;
 	}
 
+    tfa98xx_controls[mix_index].name = "SP PCMID";
+	tfa98xx_controls[mix_index].iface = SNDRV_CTL_ELEM_IFACE_MIXER;
+	tfa98xx_controls[mix_index].info = tfa98xx_info_pcm_id;
+	tfa98xx_controls[mix_index].get = tfa98xx_get_pcm_id;
+	tfa98xx_controls[mix_index].put = tfa98xx_set_pcm_id;
+	mix_index++;
+
+	tfa98xx_controls[mix_index].name = "SP MIID";
+	tfa98xx_controls[mix_index].iface = SNDRV_CTL_ELEM_IFACE_MIXER;
+	tfa98xx_controls[mix_index].info = tfa98xx_info_miid;
+	tfa98xx_controls[mix_index].get = tfa98xx_get_miid;
+	tfa98xx_controls[mix_index].put = tfa98xx_set_miid;
+	mix_index++;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
 	return snd_soc_add_component_controls(tfa98xx->codec,
 		tfa98xx_controls, mix_index);
