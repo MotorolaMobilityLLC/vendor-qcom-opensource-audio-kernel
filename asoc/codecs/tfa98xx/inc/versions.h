@@ -1,6 +1,6 @@
 #ifndef TFA98XX_VERSIONS__H
 #define TFA98XX_VERSIONS__H
 
-#define TFA98XX_GIT_VERSIONS  "v6.13.0"
+#define TFA98XX_GIT_VERSIONS  "v6.13.1"
 
 #endif
