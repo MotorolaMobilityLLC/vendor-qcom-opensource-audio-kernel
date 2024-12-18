@@ -3049,7 +3049,8 @@ enum Tfa98xx_Error tfaRunColdboot(struct tfa_device *tfa, int state)
 
 		if (tries-- == 0) {
 			pr_debug("coldboot (ACS) did not %s\n", state ? "set" : "clear");
-			return Tfa98xx_Error_Other;
+			err = Tfa98xx_Error_Other;
+			break;
 		}
 	}
 
@@ -3405,9 +3406,11 @@ enum tfa_error tfa_dev_start(struct tfa_device *tfa, int next_profile, int vstep
 		}
 	}
 	active_profile = tfa_dev_get_swprof(tfa);
+	pr_info("TFA98xx mono active_profile: %d\n", active_profile);
 
 	/* Profile switching */
 	if ((next_profile != active_profile && active_profile >= 0)) {
+		pr_info("TFA98xx mono next_profile: %d\n", next_profile);
 		err = tfaContWriteProfile(tfa, next_profile, vstep);
 		if (err != Tfa98xx_Error_Ok)
 			goto error_exit;
