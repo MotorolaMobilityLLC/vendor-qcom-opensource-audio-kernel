@@ -70,6 +70,8 @@ static TfaContainer_t *tfa98xx_container = NULL;
 static int tfa98xx_kmsg_regs = 0;
 static int tfa98xx_ftrace_regs = 0;
 
+static uint8_t is_need_ramp = 0;
+
 #ifdef CONFIG_MTK_PLATFORM
 uint8_t tfadsp_volume = 0;
 
@@ -3145,6 +3147,12 @@ static int tfa98xx_hw_params(struct snd_pcm_substream *substream,
 	}
 #endif
 
+	if((strstr(tfa_cont_profile_name(tfa98xx, prof_idx), "handset") != NULL)) {
+		is_need_ramp = 0;
+	}else {
+		is_need_ramp = 1;
+	}
+
 	/* update to new rate */
 	tfa98xx->rate = tfa98xx->tfa->rate = rate;
 
@@ -3326,6 +3334,7 @@ static int tfa98xx_send_mute_cmd(void)
 
 static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 {
+	int ramp_value = 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
 	struct snd_soc_component *codec = dai->component;
 	struct tfa98xx *tfa98xx = snd_soc_component_get_drvdata(codec);
@@ -3384,7 +3393,12 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
     		} else {
     			pr_info(" Mute Fail as DSP NOT work\n");
     		}
-        }
+
+			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_LNM, 0);
+			tfa_set_bf(tfa98xx->tfa, 0x5810, 1); /* 1 = hard muted off */
+			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 0);
+			pr_info(" TFA98xx Setting LNM when mute:1\n");
+		}
 
 		tfa_dev_stop(tfa98xx->tfa);
 		tfa98xx->dsp_init = TFA98XX_DSP_INIT_STOPPED;
@@ -3419,6 +3433,18 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 #else
 		tfa98xx_dsp_init(tfa98xx);
 #endif//
+
+		if(is_need_ramp == 1) {
+			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_LNM, 1);
+			pr_info(" TFA98xx Setting LNM as 1\n");
+		}
+		tfa_set_bf(tfa98xx->tfa, 0x5810, 0); /* 1 = hard muted off */
+		do {
+			ramp_value += 20;
+			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, ramp_value);
+			msleep(1);
+		} while(ramp_value < 160);
+		pr_info("TFA98xx Setting APMGain as normal when mute finished:0\n");
 
 #ifdef CONFIG_MTK_PLATFORM
 		if(fade_status == 1 && is_need_fade == 1) {
