@@ -3334,7 +3334,6 @@ static int tfa98xx_send_mute_cmd(void)
 
 static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 {
-	int ramp_value = 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
 	struct snd_soc_component *codec = dai->component;
 	struct tfa98xx *tfa98xx = snd_soc_component_get_drvdata(codec);
@@ -3439,11 +3438,8 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 			pr_info(" TFA98xx Setting LNM as 1\n");
 		}
 		tfa_set_bf(tfa98xx->tfa, 0x5810, 0); /* 1 = hard muted off */
-		do {
-			ramp_value += 20;
-			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, ramp_value);
-			msleep(1);
-		} while(ramp_value < 160);
+		tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 80);
+		tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 160);
 		pr_info("TFA98xx Setting APMGain as normal when mute finished:0\n");
 
 #ifdef CONFIG_MTK_PLATFORM
