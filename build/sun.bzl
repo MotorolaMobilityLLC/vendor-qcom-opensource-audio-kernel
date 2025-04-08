@@ -44,7 +44,8 @@ def define_sun():
             "wcd9378_slave_dlkm",
             "lpass_bt_swr_dlkm",
             "qmp_dlkm",
-            "tfa98xx_dlkm"
+            "tfa98xx_dlkm",
+            "aw882xx_dlkm"
         ],
         config_options = [
             "CONFIG_SND_SOC_SUN",

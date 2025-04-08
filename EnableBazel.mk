@@ -72,6 +72,9 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
 ifneq (,$(filter leap%, $(TARGET_PRODUCT)))
 LOCAL_MODULE_KO_DIRS += asoc/codecs/tfa98xx/tfa98xx_dlkm.ko
 endif
+ifneq (,$(filter roadstr%, $(TARGET_PRODUCT)))
+LOCAL_MODULE_KO_DIRS += asoc/codecs/aw882xx/aw882xx_dlkm.ko
+endif
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_slave_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd939x/wcd939x_dlkm.ko
