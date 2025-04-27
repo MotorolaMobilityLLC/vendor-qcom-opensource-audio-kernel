@@ -144,5 +144,7 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_slave_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/aw882xx/aw882xx_dlkm.ko
+LOCAL_MODULE_KO_DIRS += asoc/codecs/fs1815/fs1815_dlkm.ko
+LOCAL_MODULE_KO_DIRS += asoc/codecs/fs1815/fs1815_mngr_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/hdmi_dlkm.ko
 endif
