@@ -380,6 +380,17 @@ LOCAL_MODULE_TAGS         := optional
 LOCAL_MODULE_DEBUG_ENABLE := true
 LOCAL_MODULE_PATH         := $(KERNEL_MODULES_OUT)
 include $(DLKM_DIR)/Build_external_kernelmodule.mk
+
+########################### TFA98xx PA ################################
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES           := $(AUDIO_SRC_FILES)
+LOCAL_MODULE              := tfa98xx_dlkm.ko
+LOCAL_MODULE_KBUILD_NAME  := asoc/codecs/tfa98xx/tfa98xx_dlkm.ko
+LOCAL_MODULE_TAGS         := optional
+LOCAL_MODULE_DEBUG_ENABLE := true
+LOCAL_MODULE_PATH         := $(KERNEL_MODULES_OUT)
+include $(DLKM_DIR)/Build_external_kernelmodule.mk
+
 ifneq ($(call is-board-platform-in-list, malabar),true)
 ########################### WCD938x CODEC  ################################
 include $(CLEAR_VARS)
