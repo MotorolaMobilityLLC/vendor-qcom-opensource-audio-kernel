@@ -46,7 +46,8 @@ def define_canoe():
             "lpass_bt_swr_dlkm",
             "qmp_dlkm",
             "wsa885x_i2c_dlkm",
-            "simple_amp_dlkm"
+            "simple_amp_dlkm",
+            "tfa98xx_dlkm"
         ],
         config_options = [
             "CONFIG_SND_SOC_CANOE",
