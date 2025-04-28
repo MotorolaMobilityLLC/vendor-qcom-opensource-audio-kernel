@@ -71,6 +71,9 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/lpass-cdc/lpass_cdc_tx_macro_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/lpass-cdc/lpass_cdc_rx_macro_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa884x/wsa884x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
+ifneq (,$(filter vantg%, $(TARGET_PRODUCT)))
+LOCAL_MODULE_KO_DIRS += asoc/codecs/tfa98xx/tfa98xx_dlkm.ko
+endif
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_slave_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd939x/wcd939x_dlkm.ko
