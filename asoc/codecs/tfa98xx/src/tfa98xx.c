@@ -36,6 +36,7 @@
 #include "tfa98xx_tfafieldnames.h"
 
 #define TFA98XX_VERSION	TFA98XX_API_REV_STR
+//#define CONFIG_MTK_PLATFORM 1
 
 #define I2C_RETRIES 50
 #define I2C_RETRY_DELAY 5 /* ms */
@@ -69,8 +70,6 @@ static TfaContainer_t *tfa98xx_container = NULL;
 
 static int tfa98xx_kmsg_regs = 0;
 static int tfa98xx_ftrace_regs = 0;
-
-static uint8_t is_need_ramp = 0;
 
 #ifdef CONFIG_MTK_PLATFORM
 uint8_t tfadsp_volume = 0;
@@ -1848,7 +1847,7 @@ static int tfa98xx_get_cal_ctl(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-
+#ifndef CONFIG_MTK_PLATFORM
 static uint32_t tfa98xx_miid = 0;
 static int tfa98xx_info_miid(struct snd_kcontrol *kcontrol,
 			struct snd_ctl_elem_info *uinfo)
@@ -1924,6 +1923,7 @@ static int tfa98xx_set_pcm_id(struct snd_kcontrol *kcontrol,
 
 	return 1;
 }
+#endif
 
 static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 {
@@ -1939,6 +1939,9 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 	 */
 
 	nr_controls = 4; /* Profile and stop control and Algo Bypass */
+#ifdef CONFIG_MTK_PLATFORM
+	nr_controls += 1; /* MTK PLAFORM */
+#endif
 
 	if (tfa98xx->flags & TFA98XX_FLAG_CALIBRATION_CTL)
 		nr_controls += 1; /* calibration */
@@ -2090,6 +2093,7 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 		mix_index++;
 	}
 
+#ifndef CONFIG_MTK_PLATFORM
     tfa98xx_controls[mix_index].name = "SP PCMID";
 	tfa98xx_controls[mix_index].iface = SNDRV_CTL_ELEM_IFACE_MIXER;
 	tfa98xx_controls[mix_index].info = tfa98xx_info_pcm_id;
@@ -2103,6 +2107,8 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 	tfa98xx_controls[mix_index].get = tfa98xx_get_miid;
 	tfa98xx_controls[mix_index].put = tfa98xx_set_miid;
 	mix_index++;
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
 	return snd_soc_add_component_controls(tfa98xx->codec,
 		tfa98xx_controls, mix_index);
@@ -2804,7 +2810,6 @@ static void tfa98xx_dsp_init(struct tfa98xx *tfa98xx)
 				tfa98xx->init_count);
 			/* cancel other pending init works */
 			cancel_delayed_work(&tfa98xx->init_work);
-			pr_info("TFA98xx Setting ext_dsp as 2. \n");
 			tfa98xx->tfa->ext_dsp = 2;
 			tfa98xx->init_count = 0;
 		}
@@ -3147,12 +3152,6 @@ static int tfa98xx_hw_params(struct snd_pcm_substream *substream,
 	}
 #endif
 
-	if((strstr(tfa_cont_profile_name(tfa98xx, prof_idx), "handset") != NULL)) {
-		is_need_ramp = 0;
-	}else {
-		is_need_ramp = 1;
-	}
-
 	/* update to new rate */
 	tfa98xx->rate = tfa98xx->tfa->rate = rate;
 
@@ -3392,12 +3391,7 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
     		} else {
     			pr_info(" Mute Fail as DSP NOT work\n");
     		}
-
-			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_LNM, 0);
-			tfa_set_bf(tfa98xx->tfa, 0x5810, 1); /* 1 = hard muted off */
-			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 0);
-			pr_info(" TFA98xx Setting LNM when mute:1\n");
-		}
+        }
 
 		tfa_dev_stop(tfa98xx->tfa);
 		tfa98xx->dsp_init = TFA98XX_DSP_INIT_STOPPED;
@@ -3432,15 +3426,6 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 #else
 		tfa98xx_dsp_init(tfa98xx);
 #endif//
-
-		if(is_need_ramp == 1) {
-			tfa_set_bf(tfa98xx->tfa, TFA986X_BF_LNM, 1);
-			pr_info(" TFA98xx Setting LNM as 1\n");
-		}
-		tfa_set_bf(tfa98xx->tfa, 0x5810, 0); /* 1 = hard muted off */
-		tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 80);
-		tfa_set_bf(tfa98xx->tfa, TFA986X_BF_AMPGAIN, 160);
-		pr_info("TFA98xx Setting APMGain as normal when mute finished:0\n");
 
 #ifdef CONFIG_MTK_PLATFORM
 		if(fade_status == 1 && is_need_fade == 1) {
@@ -3814,7 +3799,6 @@ static ssize_t tfa98xx_volume_read(struct file *filp, struct kobject *kobj,
 	struct bin_attribute *bin_attr,
 	char *buf, loff_t off, size_t count)
 {
-
 	//TODO NULL;
 	return 0;
 }
@@ -4100,6 +4084,11 @@ static int tfa98xx_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id 
 			tfa98xx->flags |= TFA98XX_FLAG_TDM_DEVICE;
 			tfa98xx->flags |= TFA98XX_FLAG_OTP_TYPE_DEVICE;
 			break;
+		case 0x67: /* tfa9867*/
+			pr_info("TFA9867 detected\n");
+			tfa98xx->flags |= TFA98XX_FLAG_TDM_DEVICE;
+			tfa98xx->flags |= TFA98XX_FLAG_OTP_TYPE_DEVICE;
+			break;
 		case 0x88: /* tfa9888 */
 			pr_info("TFA9888 detected\n");
 			tfa98xx->flags |= TFA98XX_FLAG_STEREO_DEVICE;
@@ -4316,6 +4305,7 @@ static struct of_device_id tfa98xx_dt_match[] = {
 	{.compatible = "tfa,tfa9897" },
 	{.compatible = "tfa,tfa9912" },
 	{.compatible = "tfa,tfa986x" },
+	{.compatible = "tfa,tfa9867" },
 	{ },
 };
 #endif
