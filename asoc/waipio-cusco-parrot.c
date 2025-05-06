@@ -43,7 +43,7 @@
 #include "msm_common.h"
 #include "msm_dailink.h"
 
-#define DRV_NAME "waipio-asoc-snd"
+#define DRV_NAME "waipio-asoc-snd-cusco"
 #define __CHIPSET__ "WAIPIO "
 #define MSM_DAILINK_NAME(name) (__CHIPSET__#name)
 
@@ -1302,7 +1302,7 @@ static int msm_snd_card_late_probe(struct snd_soc_card *card)
 	if (!rtd) {
 		dev_err(card->dev,
 			"%s: snd_soc_get_pcm_runtime for %s failed!\n",
-			__func__, card->dai_link[0]);
+			__func__, card->dai_link[0].name);
 		return -EINVAL;
 	}
 
@@ -1642,30 +1642,29 @@ static int msm_rx_tx_codec_init(struct snd_soc_pcm_runtime *rtd)
 		pdata->codec_root = entry;
 	}
 	if(!strncmp(component->driver->name, WCD937X_DRV_NAME,
-			strlen(WCD937X_DRV_NAME))){
+		strlen(WCD937X_DRV_NAME))){
 		wcd937x_info_create_codec_entry(pdata->codec_root, component);
 		codec_variant = wcd937x_get_codec_variant(component);
 		dev_dbg(component->dev, "%s: variant %d\n",__func__, codec_variant);
-		lpass_cdc_set_port_map(lpass_cdc_component,
-			ARRAY_SIZE(sm_port_map_wcd937x), sm_port_map_wcd937x);
 	} else {
 		wcd938x_info_create_codec_entry(pdata->codec_root, component);
 		codec_variant = wcd938x_get_codec_variant(component);
 		dev_dbg(component->dev, "%s: variant %d\n", __func__, codec_variant);
-		lpass_cdc_set_port_map(lpass_cdc_component, ARRAY_SIZE(sm_port_map), sm_port_map);
 
 		/* check if the variant is wcd9385 and set RX HIFI filter capability */
 		if (codec_variant == WCD9385)
 			ret = lpass_cdc_rx_set_fir_capability(lpass_cdc_component, true);
 		else
 			ret = lpass_cdc_rx_set_fir_capability(lpass_cdc_component, false);
-	}
 
-	if (ret < 0) {
-		dev_err(component->dev, "%s: set fir capability failed: %d\n",
-			__func__, ret);
-		return ret;
+		if (ret < 0) {
+			dev_err(component->dev, "%s: set fir capability failed: %d\n",
+				__func__, ret);
+			return ret;
+		}
 	}
+	lpass_cdc_set_port_map(lpass_cdc_component, ARRAY_SIZE(sm_port_map), sm_port_map);
+
 done:
 	codec_reg_done = true;
 	msm_common_dai_link_init(rtd);
@@ -1704,7 +1703,7 @@ static int waipio_ssr_enable(struct device *dev, void *data)
 	if (!rtd_wcd) {
 		dev_dbg(dev,
 			"%s: snd_soc_get_pcm_runtime for %s failed!\n",
-			__func__, card->dai_link[0]);
+			__func__, card->dai_link[0].name);
 	}
 
 	if (pdata->wsa_max_devs > 0) {
@@ -1713,7 +1712,7 @@ static int waipio_ssr_enable(struct device *dev, void *data)
 		if (!rtd_wsa) {
 			dev_dbg(dev,
 			"%s: snd_soc_get_pcm_runtime for %s failed!\n",
-			__func__, card->dai_link[ARRAY_SIZE(msm_rx_tx_cdc_dma_be_dai_links)]);
+			__func__, card->dai_link[ARRAY_SIZE(msm_rx_tx_cdc_dma_be_dai_links)].name);
 		}
 	}
 	/* set UPD configuration */
@@ -1844,7 +1843,7 @@ static int msm_asoc_parse_soundcard_name(struct platform_device *pdev,
 		goto parse;
 	}
 	if (len <= 0 || len > sizeof(u32)) {
-		dev_dbg(&pdev->dev, "%s: nvmem cell length out of range: %d\n",
+		dev_dbg(&pdev->dev, "%s: nvmem cell length out of range: %zu\n",
 			__func__, len);
 		kfree(buf);
 		goto parse;

@@ -4,6 +4,8 @@
  */
 
 #include "fsm_public.h"
+#include "fsm_monitor_base.h"
+
 #if defined(CONFIG_FSM_CODEC)
 #include <linux/regmap.h>
 #include <linux/i2c.h>
@@ -26,6 +28,53 @@ static const struct snd_pcm_hw_constraint_list fsm_constraints = {
 	.list = fsm_rates,
 	.count = ARRAY_SIZE(fsm_rates),
 };
+
+/*********************************************************************** */
+static int fsm_monitor_switch(uint16_t scene, bool on)
+{
+	struct fsm_mntr *mntr = g_fsm_mntr;
+	int ret;
+
+	if (mntr == NULL)
+		return -EINVAL;
+
+	dev_dbg(mntr->dev, "mode: %d scene: %x-%x state: %d\n",
+			mntr->mntr_mode,
+			mntr->mntr_scene, scene,
+			mntr->monitor_on);
+
+	if (!mntr->mntr_mode)
+		return 0;
+
+	if (on && !(mntr->mntr_scene & scene))
+		return 0;
+
+	dev_info(mntr->dev, "bat monitor switch %s\n", on ? "ON" : "OFF");
+
+	if (on) {
+		if (mntr->monitor_on)
+			return 0;
+		mntr->mix_volume = fsm_get_config()->volume;
+		mntr->cur_volume = mntr->mix_volume;
+		ret  = fsm_get_ambient_info(mntr);
+		ret |= fsm_monitor_update_volume(mntr);
+		if (ret)
+			return ret;
+		mntr->monitor_on = true;
+		queue_delayed_work(mntr->thread_wq,
+				&mntr->delay_work,
+				msecs_to_jiffies(mntr->mntr_period));
+	} else {
+		if (!mntr->monitor_on)
+			return 0;
+		mntr->monitor_on = false;
+		cancel_delayed_work_sync(&mntr->delay_work);
+		fsm_set_volume(mntr->mix_volume);
+	}
+
+	return 0;
+}
+/*********************************************************************** */
 
 static int fsm_get_scene_index(uint16_t scene)
 {

@@ -226,6 +226,10 @@ static struct attribute *fs19xx_sysfs_attrs[] = {
 	NULL,
 };
 
+static struct attribute_group fs19xx_sysfs_group = {
+    .attrs = fs19xx_sysfs_attrs
+};
+
 static struct attribute *fs183x_sysfs_attrs[] = {
 	&dev_attr_fsm_info.attr,
 	&dev_attr_fsm_debug.attr,
@@ -234,8 +238,12 @@ static struct attribute *fs183x_sysfs_attrs[] = {
 	NULL,
 };
 
-ATTRIBUTE_GROUPS(fs19xx_sysfs);
-ATTRIBUTE_GROUPS(fs183x_sysfs);
+static struct attribute_group fs183x_sysfs_group = {
+    .attrs = fs183x_sysfs_attrs
+};
+
+//ATTRIBUTE_GROUPS(fs19xx_sysfs);
+//ATTRIBUTE_GROUPS(fs183x_sysfs);
 
 int fsm_sysfs_init(struct device *dev)
 {

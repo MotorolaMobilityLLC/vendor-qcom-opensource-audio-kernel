@@ -100,8 +100,14 @@ static ssize_t fsm_f0_show(struct class *class,
 }
 #endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+static ssize_t fsm_info_show(const struct class *class,
+				const struct class_attribute *attr,
+				char *buf)
+#else
 static ssize_t fsm_info_show(struct class *class,
 				struct class_attribute *attr, char *buf)
+#endif
 {
 	fsm_version_t version;
 	struct preset_file *pfile;
@@ -125,8 +131,15 @@ static ssize_t fsm_info_show(struct class *class,
 	return len;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+static ssize_t fsm_debug_store(const struct class *class,
+				const struct class_attribute *attr,
+				const char *buf,
+				size_t len)
+#else
 static ssize_t fsm_debug_store(struct class *class,
 				struct class_attribute *attr, const char *buf, size_t len)
+#endif
 {
 	fsm_config_t *cfg = fsm_get_config();
 	int value = simple_strtoul(buf, NULL, 0);

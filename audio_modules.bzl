@@ -152,7 +152,7 @@ audio_modules.register(
             "lahaina.c"
         ],
         "CONFIG_SND_SOC_WAIPIO": [
-            "waipio.c"
+            "waipio-cusco-parrot.c"
         ],
         "CONFIG_SND_SOC_KALAMA": [
             "kalama.c"
@@ -478,5 +478,22 @@ audio_modules.register(
         "aw882xx_device.c",
         "aw882xx_monitor.c",
         "aw882xx_bin_parse.c",
+    ],
+)
+# >>>> FS192XX MODULES <<<<
+audio_modules.register(
+    name = "fs19xx_dlkm",
+    path = ASOC_CODECS_PATH + "/fs19xx",
+    config_option = "CONFIG_SND_SOC_FS19XX",
+    srcs = [
+        'fsm_core.c',
+        'fsm_codec.c',
+        'fsm_firmware.c',
+        'fsm_i2c.c',
+        'fsm_misc.c',
+        'fsm_mtk_ipi.c',
+        'fsm_q6afe.c',
+        'fsm_sysfs.c',
+        'fs1958.c',
     ],
 )

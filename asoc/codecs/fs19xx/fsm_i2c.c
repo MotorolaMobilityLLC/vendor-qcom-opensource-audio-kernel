@@ -21,23 +21,27 @@ static struct regulator *g_fsm_vdd = NULL;
 #endif
 #include "fsm_monitor.h"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 25))
+#define devm_gpio_free(a, b) gpio_free(b)
+#endif
+
 static DEFINE_MUTEX(g_fsm_mutex);
 static struct device *g_fsm_pdev = NULL;
 
 /* customize configrature */
-#include "fsm_firmware.c"
-#include "fsm_sysfs.c"
-#include "fsm_misc.c"
-#include "fsm_q6afe.c"
-#include "fsm_mtk_ipi.c"
-#include "fsm_codec.c"
+//#include "fsm_firmware.c"
+//#include "fsm_sysfs.c"
+//#include "fsm_misc.c"
+//#include "fsm_q6afe.c"
+//#include "fsm_mtk_ipi.c"
+//#include "fsm_codec.c"
 
-void fsm_mutex_lock()
+void fsm_mutex_lock(void)
 {
 	mutex_lock(&g_fsm_mutex);
 }
 
-void fsm_mutex_unlock()
+void fsm_mutex_unlock(void)
 {
 	mutex_unlock(&g_fsm_mutex);
 }
@@ -457,8 +461,12 @@ MODULE_DEVICE_TABLE(of, fsm_match_tbl);
 #endif
 #endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 30))
+static int fsm_i2c_probe(struct i2c_client *i2c)
+#else
 static int fsm_i2c_probe(struct i2c_client *i2c,
 			const struct i2c_device_id *id)
+#endif
 {
 	fsm_config_t *cfg = fsm_get_config();
 	fsm_dev_t *fsm_dev;
@@ -550,6 +558,44 @@ static int fsm_i2c_probe(struct i2c_client *i2c,
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+static void fsm_i2c_remove(struct i2c_client *i2c)
+{
+	fsm_dev_t *fsm_dev = i2c_get_clientdata(i2c);
+
+	pr_debug("enter");
+	if (fsm_dev == NULL) {
+		pr_err("bad parameter");
+		return;
+	}
+	if (fsm_dev->fsm_wq) {
+		cancel_delayed_work_sync(&fsm_dev->interrupt_work);
+		cancel_delayed_work_sync(&fsm_dev->monitor_work);
+		destroy_workqueue(fsm_dev->fsm_wq);
+	}
+#if defined(CONFIG_FSM_REGMAP)
+	fsm_regmap_i2c_deinit(fsm_dev->regmap);
+#endif
+	fsm_sysfs_deinit(&i2c->dev);
+	if (fsm_dev->id == 0) {
+		fsm_monitor_deinit(&i2c->dev);
+		fsm_codec_unregister(&i2c->dev);
+		fsm_misc_deinit();
+		fsm_set_pdev(NULL);
+	}
+
+	fsm_remove(fsm_dev);
+	fsm_vddd_off();
+	if (gpio_is_valid(fsm_dev->irq_gpio)) {
+		devm_gpio_free(&i2c->dev, fsm_dev->irq_gpio);
+	}
+	if (gpio_is_valid(fsm_dev->rst_gpio)) {
+		devm_gpio_free(&i2c->dev, fsm_dev->rst_gpio);
+	}
+	devm_kfree(&i2c->dev, fsm_dev);
+	dev_info(&i2c->dev, "i2c removed");
+}
+#else
 static int fsm_i2c_remove(struct i2c_client *i2c)
 {
 	fsm_dev_t *fsm_dev = i2c_get_clientdata(i2c);
@@ -588,17 +634,27 @@ static int fsm_i2c_remove(struct i2c_client *i2c)
 
 	return 0;
 }
+#endif
 
 int exfsm_i2c_probe(struct i2c_client *i2c,
-			const struct i2c_device_id *id)
+	const struct i2c_device_id *id)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	return fsm_i2c_probe(i2c);
+#else
 	return fsm_i2c_probe(i2c, id);
+#endif
 }
 EXPORT_SYMBOL(exfsm_i2c_probe);
 
 int exfsm_i2c_remove(struct i2c_client *i2c)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	fsm_i2c_remove(i2c);
+	return 0;
+#else
 	return fsm_i2c_remove(i2c);
+#endif
 }
 EXPORT_SYMBOL(exfsm_i2c_remove);
 
