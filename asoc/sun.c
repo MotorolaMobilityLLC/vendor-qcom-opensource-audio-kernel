@@ -144,6 +144,46 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.moisture_duty_cycle_en = true,
 };
 
+static const char *const earpiece_dsense_text[] = {"On", "Off"};
+static SOC_ENUM_SINGLE_EXT_DECL(earpiece_dsense_en, earpiece_dsense_text);
+static int earpiece_dsense_en_gpio;
+static bool is_earpiece_dsense_disable;
+
+/* when gpio output is high, means earpiece dsense is off */
+static int earpiece_dsense_en_get(struct snd_kcontrol *kcontrol,
+				  struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = is_earpiece_dsense_disable;
+	pr_debug("get earpiece_dsense_pin state: %s\n",
+		 is_earpiece_dsense_disable ? "high" : "low");
+	return 0;
+}
+
+static int earpiece_dsense_en_put(struct snd_kcontrol *kcontrol,
+				  struct snd_ctl_elem_value *ucontrol)
+{
+	switch (ucontrol->value.integer.value[0]) {
+	case 0:
+		gpio_direction_output(earpiece_dsense_en_gpio, 0);
+		is_earpiece_dsense_disable = 0;
+		break;
+	case 1:
+		gpio_direction_output(earpiece_dsense_en_gpio, 1);
+		is_earpiece_dsense_disable = 1;
+		break;
+	default:
+		return -EINVAL;
+	}
+	pr_debug("set earpiece_dsense_pin: %s\n",
+		 ucontrol->value.integer.value[0] ? "high" : "low");
+	return 0;
+}
+
+static const struct snd_kcontrol_new earpiece_dsense_en_controls[] = {
+	SOC_ENUM_EXT("Earpiece Dsense Enable", earpiece_dsense_en,
+			earpiece_dsense_en_get, earpiece_dsense_en_put),
+};
+
 static bool msm_usbc_swap_gnd_mic(struct snd_soc_component *component, bool active)
 {
 	int ret = 0;
@@ -2398,6 +2438,15 @@ static int msm_rx_tx_codec_init(struct snd_soc_pcm_runtime *rtd)
 	lpass_cdc_info_create_codec_entry(pdata->codec_root, lpass_cdc_component);
 	lpass_cdc_register_wake_irq(lpass_cdc_component, false);
 
+	if (gpio_is_valid(earpiece_dsense_en_gpio)) {
+		ret = snd_soc_add_component_controls(lpass_cdc_component, earpiece_dsense_en_controls,
+						 ARRAY_SIZE(earpiece_dsense_en_controls));
+		if (ret < 0) {
+			pr_err("%s: add earpiece desense controls failed: %d\n", __func__, ret);
+			return ret;
+		}
+	}
+
 	if (pdata->wcd_disabled)
 		goto done;
 
@@ -2679,6 +2728,26 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 			dev_err(&pdev->dev, "%s: parse audio routing failed, err:%d\n",
 				__func__, ret);
 			goto err;
+		}
+	}
+
+	earpiece_dsense_en_gpio = of_get_named_gpio(pdev->dev.of_node,
+			"earpiece-dsense-enable", 0);
+	if (earpiece_dsense_en_gpio < 0) {
+		pr_err("missing earpiece_dsense_en gpio in dt node\n");
+	} else {
+		pr_info("earpiece_dsense_en_gpio = %d\n", earpiece_dsense_en_gpio);
+		if (gpio_is_valid(earpiece_dsense_en_gpio)) {
+			ret = devm_gpio_request_one(&(pdev->dev), earpiece_dsense_en_gpio,
+					GPIOF_OUT_INIT_HIGH, "earpiece_dsense_en");
+			if (ret) {
+				pr_err("earpiece_dsense_en_gpio, devm_gpio_request_one failed");
+			} else {
+				gpio_direction_output(earpiece_dsense_en_gpio, 1);
+				is_earpiece_dsense_disable = 1;
+			}
+		} else {
+			pr_err("Invalid earpiece_dsense_en gpio\n");
 		}
 	}
 
