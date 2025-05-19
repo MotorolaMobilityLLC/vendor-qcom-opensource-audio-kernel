@@ -41,7 +41,7 @@ PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/lpass_bt_swr_dlkm.ko
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/wcd9378_slave_dlkm.ko \
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/wcd9378_dlkm.ko \
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/qmp_dlkm.ko
-ifneq (,$(filter leap%, $(TARGET_PRODUCT)))
+ifneq (,$(filter leap% roadstr%, $(TARGET_PRODUCT)))
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/tfa98xx_dlkm.ko
 endif
 ifneq (,$(filter roadstr%, $(TARGET_PRODUCT)))
