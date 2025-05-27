@@ -645,6 +645,7 @@ static struct snd_soc_dai_link msm_swr_haptics_be_dai_links[] = {
 		.ops = &msm_common_be_ops,
 		SND_SOC_DAILINK_REG(rx_dma_rx6),
 	},
+#if 0
 	{
 		.name = LPASS_BE_WSA_CDC_DMA_RX_4,
 		.stream_name = LPASS_BE_WSA_CDC_DMA_RX_4,
@@ -656,6 +657,7 @@ static struct snd_soc_dai_link msm_swr_haptics_be_dai_links[] = {
 		.ops = &msm_common_be_ops,
 		SND_SOC_DAILINK_REG(wsa_dma_rx4),
 	},
+#endif
 };
 
 #ifndef CONFIG_AUDIO_BTFM_PROXY
