@@ -300,14 +300,14 @@ SND_SOC_DAILINK_DEFS(pri_mi2s_tx,
 
 SND_SOC_DAILINK_DEFS(pri_mi2s_rx_tfa98xx,
 	DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
-       DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx-0034", "tfa98xx-aif-34"),
-                          COMP_CODEC("tfa98xx-0035", "tfa98xx-aif-35")),
+       DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx.3-0034", "tfa98xx-aif-34"),
+                          COMP_CODEC("tfa98xx.3-0035", "tfa98xx-aif-35")),
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(pri_mi2s_tx_tfa98xx,
 	DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
-       DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx-0034", "tfa98xx-aif-34"),
-                          COMP_CODEC("tfa98xx-0035", "tfa98xx-aif-35")),
+       DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx.3-0034", "tfa98xx-aif-34"),
+                          COMP_CODEC("tfa98xx.3-0035", "tfa98xx-aif-35")),
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(sec_mi2s_rx,
