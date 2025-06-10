@@ -3,7 +3,7 @@ load(":module_mgr.bzl", "define_target_modules")
 load("//msm-kernel:moto_product.bzl", "mmi_product_name")
 
 def define_parrot():
-    if (mmi_product_name == "portov"):
+    if (mmi_product_name == "portov" or mmi_product_name == "mumba"):
         define_target_modules(
             target = "parrot",
             variants = ["consolidate", "perf"],
