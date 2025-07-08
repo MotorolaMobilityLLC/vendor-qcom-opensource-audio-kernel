@@ -1484,6 +1484,167 @@ static struct snd_soc_dai_link msm_mi2s_aw882xx_dai_links[] = {
         },
 };
 
+/*
+ * I2S interface pinctrl mapping
+ * ------------------------------------
+ * Primary	- pri_mi2s
+ * Secondary	- lpi_i2s3
+ * Tertiary	- tert_mi2s
+ * Quaternary	- quat_mi2s (lpi_i2s0)
+ * Quinary	- lpi_i2s1
+ * Senary	- lpi_i2s2
+ * ------------------------------------
+ */
+static struct snd_soc_dai_link msm_mi2s_aw8693x_tfa98xx_dai_links[] = {
+	{
+		.name = LPASS_BE_PRI_MI2S_RX,
+		.stream_name = LPASS_BE_PRI_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(pri_mi2s_rx_aw8693x),
+	},
+	{
+		.name = LPASS_BE_PRI_MI2S_TX,
+		.stream_name = LPASS_BE_PRI_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(pri_mi2s_tx),
+	},
+	{
+		.name = LPASS_BE_SEC_MI2S_RX,
+		.stream_name = LPASS_BE_SEC_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(sec_mi2s_rx),
+	},
+	{
+		.name = LPASS_BE_SEC_MI2S_TX,
+		.stream_name = LPASS_BE_SEC_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(sec_mi2s_tx),
+	},
+	{
+		.name = LPASS_BE_TERT_MI2S_RX,
+		.stream_name = LPASS_BE_TERT_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(tert_mi2s_rx),
+	},
+	{
+		.name = LPASS_BE_TERT_MI2S_TX,
+		.stream_name = LPASS_BE_TERT_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(tert_mi2s_tx),
+	},
+	{
+		.name = LPASS_BE_QUAT_MI2S_RX,
+		.stream_name = LPASS_BE_QUAT_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(quat_mi2s_rx_tfa98xx),
+	},
+	{
+		.name = LPASS_BE_QUAT_MI2S_TX,
+		.stream_name = LPASS_BE_QUAT_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(quat_mi2s_tx_tfa98xx),
+	},
+	{
+		.name = LPASS_BE_QUIN_MI2S_RX,
+		.stream_name = LPASS_BE_QUIN_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(quin_mi2s_rx),
+	},
+	{
+		.name = LPASS_BE_QUIN_MI2S_TX,
+		.stream_name = LPASS_BE_QUIN_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(quin_mi2s_tx),
+	},
+	{
+		.name = LPASS_BE_SEN_MI2S_RX,
+		.stream_name = LPASS_BE_SEN_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(sen_mi2s_rx),
+	},
+	{
+		.name = LPASS_BE_SEN_MI2S_TX,
+		.stream_name = LPASS_BE_SEN_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(sen_mi2s_tx),
+	},
+	{
+		.name = LPASS_BE_SEP_MI2S_RX,
+		.stream_name = LPASS_BE_SEP_MI2S_RX,
+		.playback_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(sep_mi2s_rx),
+	},
+	{
+		.name = LPASS_BE_SEP_MI2S_TX,
+		.stream_name = LPASS_BE_SEP_MI2S_TX,
+		.capture_only = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.ops = &msm_common_be_ops,
+		.ignore_suspend = 1,
+		SND_SOC_DAILINK_REG(sep_mi2s_tx),
+	},
+};
+
 static struct snd_soc_dai_link msm_tdm_dai_links[] = {
 	{
 		.name = LPASS_BE_PRI_TDM_RX_0,
@@ -1953,7 +2114,16 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev, int w
 				memcpy(msm_sun_dai_links + total_links,
                                         msm_mi2s_aw882xx_dai_links,
                                         sizeof(msm_mi2s_aw882xx_dai_links));
+			} else if (of_find_property(dev->of_node,
+					"haptic-i2s-supported", NULL))  {
+				dev_info(dev,"%s: add msm_mi2s_aw8693x_tfa98xx_dai_links",
+					__func__);
+				memcpy(msm_sun_dai_links + total_links,
+					msm_mi2s_aw8693x_tfa98xx_dai_links,
+					sizeof(msm_mi2s_aw8693x_tfa98xx_dai_links));
 			} else {
+				dev_info(dev,"%s: add tfa98xx dai_links",
+					__func__);
 				memcpy(msm_sun_dai_links + total_links,
 					msm_mi2s_dai_links,
 					sizeof(msm_mi2s_dai_links));
