@@ -52,7 +52,7 @@ endif
 ifeq ($(call is-board-platform-in-list,sun tuna), true)
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/lpass_bt_swr_dlkm.ko
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/qmp_dlkm.ko
-ifneq (,$(filter leap%, $(TARGET_PRODUCT)))
+ifneq (,$(filter leap% lhotse%, $(TARGET_PRODUCT)))
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/tfa98xx_dlkm.ko
 endif
 endif
