@@ -69,7 +69,7 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/lpass-cdc/lpass_cdc_tx_macro_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/lpass-cdc/lpass_cdc_rx_macro_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa884x/wsa884x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
-ifneq (,$(filter leap% roadstr% qogir%, $(TARGET_PRODUCT)))
+ifneq (,$(filter leap% lhotse% roadstr% qogir%, $(TARGET_PRODUCT)))
 LOCAL_MODULE_KO_DIRS += asoc/codecs/tfa98xx/tfa98xx_dlkm.ko
 endif
 ifneq (,$(filter roadstr%, $(TARGET_PRODUCT)))
