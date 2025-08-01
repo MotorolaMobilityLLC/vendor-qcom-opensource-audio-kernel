@@ -33,6 +33,7 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa884x/wsa884x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd937x/wcd937x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd937x/wcd937x_slave_dlkm.ko
+LOCAL_MODULE_KO_DIRS += asoc/codecs/aw882xx/aw882xx_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd938x/wcd938x_slave_dlkm.ko
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd939x/wcd939x_dlkm.ko

@@ -326,7 +326,8 @@ def define_volcano(t, v, lt=None):
             "wcd939x_dlkm",
             "wcd939x_slave_dlkm",
             "wcd9378_dlkm",
-            "wcd9378_slave_dlkm"
+            "wcd9378_slave_dlkm",
+            "aw882xx_dlkm"
         ],
         config_options = [
             "CONFIG_SND_SOC_VOLCANO",
