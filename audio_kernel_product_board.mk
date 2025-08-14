@@ -18,7 +18,9 @@ PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/q6_notifier_dlkm.ko\
 	$(KERNEL_MODULES_OUT)/stub_dlkm.ko \
 	$(KERNEL_MODULES_OUT)/machine_dlkm.ko
 
+ifneq (,$(filter marvel%, $(TARGET_PRODUCT)))
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/aw882xx_dlkm.ko
+endif
 
 ifneq (,$(call is-board-platform-in-list2,volcano))
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/lpass_bt_swr_dlkm.ko
