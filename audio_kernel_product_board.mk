@@ -42,7 +42,7 @@ PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/lpass_bt_swr_dlkm.ko
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/qmp_dlkm.ko
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/simple_amp_dlkm.ko
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/wsa885x_i2c_dlkm.ko
-ifneq (,$(filter vantg% blanc%, $(TARGET_PRODUCT)))
+ifneq (,$(filter vantage% vantg% blanc%, $(TARGET_PRODUCT)))
 PRODUCT_PACKAGES += $(KERNEL_MODULES_OUT)/tfa98xx_dlkm.ko
 endif
 endif
