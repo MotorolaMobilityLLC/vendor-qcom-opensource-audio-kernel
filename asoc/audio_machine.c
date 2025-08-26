@@ -2420,9 +2420,8 @@ static int msm_rx_tx_codec_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(dapm, "Analog Mic4");
 	snd_soc_dapm_ignore_suspend(dapm, "Analog Mic5");
 
-	if (!pdata->wcd_disabled)
-		lpass_cdc_set_port_map(lpass_cdc_component,
-				ARRAY_SIZE(sm_rx_port_map), sm_rx_port_map);
+	lpass_cdc_set_port_map(lpass_cdc_component,
+			ARRAY_SIZE(sm_rx_port_map), sm_rx_port_map);
 
 	card = rtd->card->snd_card;
 	if (!pdata->codec_root) {
