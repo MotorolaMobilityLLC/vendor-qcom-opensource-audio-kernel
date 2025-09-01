@@ -218,6 +218,7 @@ audio_modules.register(
             ":%b_wsa884x_dlkm",
             ":%b_snd_event_dlkm",
             ":%b_wcd9378_dlkm",
+            ":%b_tfa98xx_dlkm",
 	],
 )
 # >>>> ASOC/CODEC MODULES <<<<
