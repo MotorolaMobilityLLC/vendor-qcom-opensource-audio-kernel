@@ -3906,6 +3906,19 @@ retry:
 	return ((ret > 1) ? count : -EIO);
 }
 
+/* below val will be set to 1 if any tfa98xx i2c device probe failed
+ * otherwise it will keep as 0
+ */
+static int i2c_probe_fail = 0;
+
+int tfa98xx_get_probe_status(void)
+{
+	pr_info("%s,i2c_probe_fail = %d\n", __func__, i2c_probe_fail);
+	return i2c_probe_fail;
+}
+
+EXPORT_SYMBOL_GPL(tfa98xx_get_probe_status);
+
 static struct bin_attribute dev_attr_rw = {
 	.attr = {
 		.name = "rw",
@@ -4038,6 +4051,7 @@ static int tfa98xx_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id 
 		if (ret < 0) {
 			dev_err(&i2c->dev, "Failed to read Revision register: %d\n",
 				ret);
+			i2c_probe_fail = 1;
 			return -EIO;
 		}
 		switch (reg & 0xff) {
@@ -4326,6 +4340,8 @@ static int __init tfa98xx_i2c_init(void)
 	int ret = 0;
 
 	pr_info("TFA98XX driver version %s\n", TFA98XX_VERSION);
+
+	i2c_probe_fail = 0;
 
 	/* Enable debug traces */
 	tfa98xx_kmsg_regs = trace_level & 2;

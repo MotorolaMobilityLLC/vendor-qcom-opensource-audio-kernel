@@ -1824,6 +1824,10 @@ err_hs_detect:
 	return ret;
 }
 
+#if IS_ENABLED(CONFIG_SND_SOC_TFA98XX_SEN_MI2S)
+extern int tfa98xx_get_probe_status(void);
+#endif
+
 static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev, int wsa_max_devs)
 {
 	struct snd_soc_card *card = NULL;
@@ -1904,6 +1908,19 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev, int w
 		       sizeof(msm_common_be_dai_links));
 		total_links += ARRAY_SIZE(msm_common_be_dai_links);
 
+#if IS_ENABLED(CONFIG_SND_SOC_TFA98XX_SEN_MI2S)
+		rc = of_property_read_u32(dev->of_node,
+			"custom-tfa98xx-probe-status", &val);
+		dev_info(dev,"%s:read custom-tfa98xx-probe-status:rc=%d,val=%d",
+			__func__,rc,val);
+		if (!rc && (val == 1)) {
+			if (tfa98xx_get_probe_status() != 0) {
+				dev_err(dev, "skip mi2s register as tfa98xx probe fail\n");
+				goto skip_i2s;
+			}
+		}
+#endif
+
 		rc = of_property_read_u32(dev->of_node,
 				"qcom,mi2s-audio-intf", &val);
 		if (!rc && val) {
@@ -1912,6 +1929,10 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev, int w
 					sizeof(msm_mi2s_dai_links));
 			total_links += ARRAY_SIZE(msm_mi2s_dai_links);
 		}
+
+#if IS_ENABLED(CONFIG_SND_SOC_TFA98XX_SEN_MI2S)
+skip_i2s:
+#endif
 
 		rc = of_property_read_u32(dev->of_node,
 				"qcom,tdm-audio-intf", &val);
