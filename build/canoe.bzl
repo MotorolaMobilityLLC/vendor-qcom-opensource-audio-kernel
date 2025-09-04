@@ -28,7 +28,7 @@ def define_canoe():
             "swr_dmic_dlkm",
             "wcd9xxx_dlkm",
             "swr_haptics_dlkm",
-            "sdca_registers_dlkm",
+	        "sdca_registers_dlkm",
             "stub_dlkm",
             "hdmi_dlkm",
             "lpass_cdc_dlkm",
@@ -47,6 +47,7 @@ def define_canoe():
             "wcd9378_slave_dlkm",
             "lpass_bt_swr_dlkm",
             "qmp_dlkm",
+            "wsa885x_i2c_dlkm",
             "simple_amp_dlkm",
             "tfa98xx_dlkm"
         ],
@@ -57,7 +58,7 @@ def define_canoe():
             "CONFIG_DIGITAL_CDC_RSC_MGR",
             "CONFIG_SOUNDWIRE_MSTR_CTRL",
             "CONFIG_SWRM_VER_2P0",
-            "CONFIG_BOLERO_VER_2P85",
+	        "CONFIG_BOLERO_VER_2P85",
             "CONFIG_WCD9XXX_CODEC_CORE_V2",
             "CONFIG_MSM_CDC_PINCTRL",
             "CONFIG_SND_SOC_WCD_IRQ",
@@ -67,6 +68,7 @@ def define_canoe():
             "CONFIG_AUDIO_BTFM_PROXY",
             "CONFIG_MSM_EXT_DISPLAY",
             "CONFIG_SND_SOC_QMP",
+            "CONFIG_SND_SOC_WSA885X_I2C",
             "CONFIG_SND_SOC_SIMPLE_AMP",
             "CONFIG_SND_SOC_TFA98XX_SEN_MI2S",
         ]
