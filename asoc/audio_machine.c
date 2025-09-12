@@ -406,6 +406,17 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 					return ret;
 				}
 			}
+		} else if (pdata->pm_eldo_dmic_gpio) {
+			dmic_micbias_cnt++;
+			dev_dbg(component->dev, "%s: dmic_micbias_cnt %d\n", __func__, dmic_micbias_cnt);
+			if (dmic_micbias_cnt == 1) {
+				dev_info(component->dev, "%s: enable micbias\n", __func__);
+				ret = gpio_direction_output(pdata->pm_eldo_dmic_gpio, 1);
+				if (ret < 0) {
+					pr_err_ratelimited("%s: enable dmic micbias failed\n", __func__);
+					return ret;
+				}
+			}
 		}
 		(*dmic_gpio_cnt)++;
 		if (*dmic_gpio_cnt == 1) {
@@ -430,6 +441,17 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 				if (ret < 0) {
 					pr_err_ratelimited("%s: micbias gpio set cannot be de-activated %sd",
 						__func__, "pdata->dmic_micbias_gpio_p");
+					return ret;
+				}
+			}
+		} else if (pdata->pm_eldo_dmic_gpio) {
+			dmic_micbias_cnt--;
+			dev_dbg(component->dev, "%s: dmic_micbias_cnt %d\n", __func__, dmic_micbias_cnt);
+			if (dmic_micbias_cnt == 0) {
+				dev_info(component->dev, "%s: disable micbias\n", __func__);
+				ret = gpio_direction_output(pdata->pm_eldo_dmic_gpio, 0);
+				if (ret < 0) {
+					pr_err_ratelimited("%s: disable dmic micbias failed\n", __func__);
 					return ret;
 				}
 			}
@@ -2832,7 +2854,7 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 			if (ret) {
 				pr_err("ELDO_DMIC_GPIO, devm_gpio_request failed, ret %d", ret);
 			} else {
-				gpio_direction_output(pdata->pm_eldo_dmic_gpio, 1);
+				gpio_direction_output(pdata->pm_eldo_dmic_gpio, 0);
 			}
 		}
 		ret = 0;
