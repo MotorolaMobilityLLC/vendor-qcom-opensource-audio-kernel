@@ -1788,8 +1788,12 @@ static struct aw87xxx *aw87xxx_malloc_init(struct i2c_client *client)
 	return aw87xxx;
 }
 
+#ifdef AW_KERNEL_VER_OVER_6_1_0
+static int aw87xxx_i2c_probe(struct i2c_client *client)
+#else
 static int aw87xxx_i2c_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
+#endif
 {
 	struct device_node *dev_node = client->dev.of_node;
 	struct aw87xxx *aw87xxx = NULL;
