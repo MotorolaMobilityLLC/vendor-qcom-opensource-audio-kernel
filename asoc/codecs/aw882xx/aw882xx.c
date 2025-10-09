@@ -2204,7 +2204,7 @@ static int aw882xx_parse_gpio_dt(struct aw882xx *aw882xx,
 	if (aw882xx->reset_gpio < 0)
 		aw_dev_info(aw882xx->dev, "no reset gpio provided, will not HW reset device");
 	else
-		aw_dev_info(aw882xx->dev, "reset gpio provided ok");
+		aw_dev_info(aw882xx->dev, "reset gpio provided ok: %d", aw882xx->reset_gpio);
 
 	aw882xx->irq_gpio = of_get_named_gpio(np, "irq-gpio", 0);
 	if (aw882xx->irq_gpio < 0)
@@ -2398,6 +2398,12 @@ int aw882xx_hw_reset(struct aw882xx *aw882xx)
 	aw_dev_info(aw882xx->dev, "enter");
 
 	if (gpio_is_valid(aw882xx->reset_gpio)) {
+		/* specific change for dallas, dual aw88271 and shared one hw reset pin */
+		if ((g_aw882xx_dev_cnt == 0) && (aw882xx->reset_gpio == 667)) {
+			aw882xx->reset_gpio += 1;
+			aw_dev_info(aw882xx->dev, "reset pin: %d", aw882xx->reset_gpio);
+		}
+
 		gpio_set_value_cansleep(aw882xx->reset_gpio, 0);
 		mdelay(1);
 		gpio_set_value_cansleep(aw882xx->reset_gpio, 1);
