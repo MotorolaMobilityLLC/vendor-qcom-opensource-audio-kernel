@@ -32,7 +32,8 @@ ddk_headers(
         "ipc/**/*.h",
         "soc/**/*.h"
     ]),
-    includes = ["asoc/codecs/tfa98xx/inc"]
+    includes = ["asoc/codecs/tfa98xx/inc",
+    			 "asoc/codecs/aw882xx/inc"]
 )
 ddk_headers(
     name = "audio_configs",
