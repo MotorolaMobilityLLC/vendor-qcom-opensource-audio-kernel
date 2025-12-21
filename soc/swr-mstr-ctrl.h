@@ -46,6 +46,7 @@
 #define SWRM_VERSION_2_0   0x02000000
 #define SWRM_VERSION_2_1   0x02010000
 #define SWRM_VERSION_2_2   0x02020000
+#define SWRM_VERSION_4_0   0x04000000
 
 #define SWR_MAX_CH_PER_PORT 8
 
@@ -212,6 +213,7 @@ struct swr_mstr_ctrl {
 	unsigned int read_data;
 #endif
 	struct proc_dir_entry *swr_mstr_ctrl_proc_entry;
+	u32 port_wordlength[SWR_MSTR_PORT_LEN + 1];
 };
 
 #endif /* _SWR_WCD_CTRL_H */

@@ -3107,6 +3107,17 @@ static void swrm_device_wakeup_unvote(struct swr_master *mstr)
 	swrm_unlock_sleep(swrm);
 }
 
+static void swrm_update_wordlength(struct swr_mstr_ctrl *swrm)
+{
+	u8 i = 0;
+
+	for (i = 0; i < SWR_MSTR_PORT_LEN; i++) {
+		if (swrm->port_wordlength[i] != 0xff)
+			swr_master_write(swrm, SWRM_DP_BLOCK_CTRL_1((i + 1)),
+				swrm->port_wordlength[i]);
+	}
+}
+
 static int swrm_master_init(struct swr_mstr_ctrl *swrm)
 {
 	int ret = 0, i = 0;
@@ -3115,7 +3126,7 @@ static int swrm_master_init(struct swr_mstr_ctrl *swrm)
 	u8 col_ctrl = SWR_MIN_COL;
 	u8 num_rows = SWRM_ROW_50;
 	u8 ssp_period = 1;
-	u8 retry_cmd_num = 3;
+	u8 retry_cmd_num = 3, retry_reset_chk = 10;
 	u32 reg[SWRM_MAX_INIT_REG];
 	u32 value[SWRM_MAX_INIT_REG];
 	u32 temp = 0;
@@ -3156,8 +3167,14 @@ static int swrm_master_init(struct swr_mstr_ctrl *swrm)
 	value[len++] = val;
 
 	/* Set Auto enumeration flag */
-	reg[len] = SWRM_ENUMERATOR_CFG;
-	value[len++] = 1;
+	if (swrm->version <= SWRM_VERSION_4_0 &&
+			swrm->version > SWRM_VERSION_1_7) {
+		reg[len] = SWRM_ENUMERATOR_CFG;
+		value[len++] = 0;
+	} else {
+		reg[len] = SWRM_ENUMERATOR_CFG;
+		value[len++] = 1;
+	}
 
 	/* Configure No pings */
 	val = swr_master_read(swrm, SWRM_MCP_CFG);
@@ -3198,11 +3215,22 @@ static int swrm_master_init(struct swr_mstr_ctrl *swrm)
 	reg[len] = REGISTER_ADDRESS(swrm->version_index, SWRM_INTERRUPT_CLEAR);
 	value[len++] = 0xFFFFFFFF;
 
-	swrm->intr_mask = REGISTER_ADDRESS(swrm->version_index,
+	if (swrm->version <= SWRM_VERSION_4_0 &&
+			swrm->version > SWRM_VERSION_1_7)
+		swrm->intr_mask = 0;
+	else
+		swrm->intr_mask = REGISTER_ADDRESS(swrm->version_index,
 						SWRM_INTERRUPT_STATUS_MASK);
+
 	/* Mask soundwire interrupts */
 	reg[len] = REGISTER_ADDRESS(swrm->version_index, SWRM_INTERRUPT_EN);
 	value[len++] = swrm->intr_mask;
+
+	if (swrm->version <= SWRM_VERSION_4_0 &&
+			swrm->version > SWRM_VERSION_1_7) {
+		reg[len] = SWRM_COMP_FEATURE_CFG;
+		value[len++] = 0x140E;
+	}
 
 	reg[len] = SWRM_COMP_CFG;
 	value[len++] = 0x03;
@@ -3212,21 +3240,61 @@ static int swrm_master_init(struct swr_mstr_ctrl *swrm)
 		value[len++] = 0x01;
 	}
 
-
 	swr_master_bulk_write(swrm, reg, value, len);
 
 	if (!swrm_check_link_status(swrm, 0x1)) {
-		dev_err(swrm->dev,
-			"%s: swr link failed to connect\n",
-			__func__);
+		dev_err(swrm->dev, "%s: swr link failed to connect\n", __func__);
 		for (i = 0; i < len; i++) {
 			usleep_range(50, 55);
-			dev_err(swrm->dev,
-				"%s:reg:0x%x val:0x%x\n",
-				__func__,
+			dev_err(swrm->dev, "%s:reg:0x%x val:0x%x\n", __func__,
 				reg[i], swr_master_read(swrm, reg[i]));
 		}
 		return -EINVAL;
+	}
+
+	if (swrm->version <= SWRM_VERSION_4_0 &&
+			swrm->version > SWRM_VERSION_1_7) {
+		swr_master_write(swrm, SWRM_MCP_BUS_CTRL, 0x01);
+		while (swr_master_read(swrm, SWRM_COMP_STATUS) & 0x02) {
+			usleep_range(50, 55);
+			if (--retry_reset_chk == 0)
+				break;
+		}
+		dev_dbg(swrm->dev, "%s: BUS reset check completed 0x%X:\n",
+			__func__, swr_master_read(swrm, SWRM_COMP_STATUS));
+
+		/* clock stop sequence */
+		swrm_cmd_fifo_wr_cmd(swrm, 0x2, 0xF, 0xF,
+				SWRS_SCP_CONTROL);
+		usleep_range(100, 105);
+
+		if (!swrm_check_link_status(swrm, 0x0))
+			dev_err(swrm->dev, "%s:failed in disconnecting?\n",
+					__func__);
+
+		/* Update word length for all ports. */
+		swrm_update_wordlength(swrm);
+
+		/* Enable auto enumeration. */
+		swr_master_write(swrm, SWRM_ENUMERATOR_CFG, 0x1);
+		swr_master_write(swrm, SWRM_COMP_FEATURE_CFG, 0x40E);
+
+		/* Enable interrupts and clk. */
+		swrm->intr_mask = REGISTER_ADDRESS(swrm->version_index,
+						SWRM_INTERRUPT_STATUS_MASK);
+		swr_master_write(swrm,
+			REGISTER_ADDRESS(swrm->version_index, SWRM_INTERRUPT_EN), swrm->intr_mask);
+		swr_master_write(swrm, SWRM_CLK_CTRL(swrm->ee_val), 0x1);
+
+		if (!swrm_check_link_status(swrm, 0x1)) {
+			dev_err(swrm->dev, "%s: swr link failed to connect\n", __func__);
+			for (i = 0; i < len; i++) {
+				usleep_range(50, 55);
+				dev_err(swrm->dev, "%s:reg:0x%x val:0x%x\n",
+					__func__, reg[i], swr_master_read(swrm, reg[i]));
+			}
+			return -EINVAL;
+		}
 	}
 
 	/* Execute it for versions >= 1.5.1 */
@@ -3549,6 +3617,37 @@ static int swrm_probe(struct platform_device *pdev)
 		old_port_num = port_num;
 	}
 	devm_kfree(&pdev->dev, temp);
+
+	/* This array is required only for enabling a software workaround. */
+	for (i = 0; i <= SWR_MSTR_PORT_LEN; i++)
+		swrm->port_wordlength[i] = 0xff;
+
+	/* Parse wordlength information if available. */
+	if (of_find_property(pdev->dev.of_node, "qcom,swr-port-wordlength",
+				&map_size)) {
+		dev_info(swrm->dev, "word length given\n");
+
+		map_length = map_size / sizeof(u32);
+
+		temp = devm_kzalloc(&pdev->dev, map_size, GFP_KERNEL);
+		if (!temp) {
+			ret = -ENOMEM;
+			goto err_pdata_fail;
+		}
+		ret = of_property_read_u32_array(pdev->dev.of_node,
+				"qcom,swr-port-wordlength", temp, map_length);
+		if (ret) {
+			dev_err(swrm->dev, "%s: Failed to read port mapping\n",
+						__func__);
+
+			goto err_pdata_fail;
+		}
+
+		for (i = 0; i < map_length; i++)
+			swrm->port_wordlength[i] = temp[i];
+
+		devm_kfree(&pdev->dev, temp);
+	}
 
 	ret = of_property_read_u32(pdev->dev.of_node, "qcom,is-always-on",
 				&swrm->is_always_on);
@@ -3935,13 +4034,12 @@ static int swrm_runtime_resume(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 	struct swr_mstr_ctrl *swrm = platform_get_drvdata(pdev);
 	int ret = 0;
-	int val = 0;
 	bool swrm_clk_req_err = false;
 	bool hw_core_err = false, aud_core_err = false;
 	struct swr_master *mstr = &swrm->master;
 	struct swr_device *swr_dev;
 	struct irq_data *irqd;
-	u32 temp = 0;
+	u32 temp = 0, val = 0, swr_rst_chk_cnt = 5;
 
 	dev_dbg(dev, "%s: pm_runtime: resume, state:%d\n",
 		__func__, swrm->state);
@@ -4017,8 +4115,17 @@ static int swrm_runtime_resume(struct device *dev)
 
 			if (swrm_first_after_clk_enabled(swrm) || swrm->mstr_init_required) {
 				swr_master_write(swrm, SWRM_COMP_SW_RESET, 0x01);
-				swr_master_write(swrm, SWRM_COMP_SW_RESET, 0x01);
-				swr_master_write(swrm, SWRM_MCP_BUS_CTRL, 0x01);
+				while (swr_rst_chk_cnt--) {
+					val = swr_master_read(swrm, SWRM_COMP_SW_RESET);
+					dev_dbg(dev, "%s Read SWRM_COMP_SW_RESET value 0x%x\n",
+						__func__, val);
+					if (val == 0x0)
+						break;
+					usleep_range(100, 105);
+				}
+				if (swrm->master_id != MASTER_ID_BT)
+					swr_master_write(swrm, SWRM_MCP_BUS_CTRL, 0x01);
+
 				swrm_master_init(swrm);
 				swrm->mstr_init_required = false;
 
