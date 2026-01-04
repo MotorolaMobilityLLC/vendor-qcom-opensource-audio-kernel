@@ -92,6 +92,10 @@ static char *fw_name = "tfa98xx.cnt";
 module_param(fw_name, charp, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(fw_name, "TFA98xx DSP firmware (container file) name.");
 
+static char *fw_name2 = "tfa98xx_2.cnt";
+module_param(fw_name2, charp, S_IRUGO | S_IWUSR);
+MODULE_PARM_DESC(fw_name2, "TFA98xx DSP firmware (container file) name.");
+
 static int trace_level = 0;
 module_param(trace_level, int, S_IRUGO);
 MODULE_PARM_DESC(trace_level, "TFA98xx debug trace level (0=off, bits:1=verbose,2=regdmesg,3=regftrace,4=timing).");
@@ -2824,6 +2828,12 @@ static int tfa98xx_load_container(struct tfa98xx *tfa98xx)
 {
 	tfa98xx->dsp_fw_state = TFA98XX_DSP_FW_PENDING;
 
+        if (tfa98xx->fw_num == 2){
+            return request_firmware_nowait(THIS_MODULE, true,
+                fw_name2, tfa98xx->dev, GFP_KERNEL,
+                tfa98xx, tfa98xx_container_loaded);
+        }
+
 	return request_firmware_nowait(THIS_MODULE, true,
 		fw_name, tfa98xx->dev, GFP_KERNEL,
 		tfa98xx, tfa98xx_container_loaded);                   //modify by mono for kernel6.1 20231030
@@ -3841,6 +3851,16 @@ static int tfa98xx_parse_dt(struct device *dev, struct tfa98xx *tfa98xx,
 	 tfa98xx->reset_polarity = (value == 0) ? LOW : HIGH;
         }
 	dev_dbg(dev, "reset-polarity:%d\n",tfa98xx->reset_polarity);
+
+        ret = of_property_read_u32(np,"fw-num",&value);
+        if (ret < 0)
+        {
+             tfa98xx->fw_num = 0;
+        }else {
+             tfa98xx->fw_num = (value == 2) ? 2 : 0;
+        }
+        dev_info(dev, "fw-num:%d\n",tfa98xx->fw_num);
+
 	return 0;
 }
 
