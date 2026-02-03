@@ -731,6 +731,7 @@ static int aw882xx_hw_status_get(struct snd_kcontrol *kcontrol,
 	struct aw882xx *aw882xx =
 		aw_componet_codec_ops.codec_get_drvdata(codec);
 	struct aw_device *aw_dev = aw882xx->aw_pa;
+	aw_dev_monitor_hw_status(aw_dev);
 	ucontrol->value.integer.value[0] = aw_dev->hw_st;
 	aw_dev_info(aw882xx->dev, "ucontrol->value.integer.value[0]=%d",
 				aw_dev->hw_st);
