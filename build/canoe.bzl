@@ -3,7 +3,7 @@ load(":module_mgr.bzl", "define_target_modules")
 load("//soc-repo:moto_product.bzl", "mmi_product_name")
 
 def define_canoe():
-  if mmi_product_name in ["blanc", "vantage"]:
+  if mmi_product_name in ["blanc", "vantage", "makalu"]:
         define_target_modules(
         target = "canoe",
         variants = ["consolidate", "perf"],

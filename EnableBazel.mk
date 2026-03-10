@@ -74,7 +74,7 @@ LOCAL_MODULE_KO_DIRS += asoc/codecs/wsa883x/wsa883x_dlkm.ko
 ifneq (,$(filter avr%, $(TARGET_PRODUCT)))
 LOCAL_MODULE_KO_DIRS += asoc/codecs/aw882xx/aw882xx_dlkm.ko
 endif
-ifneq (,$(filter vantage% vantg% blanc%, $(TARGET_PRODUCT)))
+ifneq (,$(filter vantage% vantg% blanc% makalu%, $(TARGET_PRODUCT)))
 LOCAL_MODULE_KO_DIRS += asoc/codecs/tfa98xx/tfa98xx_dlkm.ko
 endif
 LOCAL_MODULE_KO_DIRS += asoc/codecs/wcd939x/wcd939x_dlkm.ko

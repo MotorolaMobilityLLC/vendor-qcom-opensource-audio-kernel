@@ -56,7 +56,7 @@ AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/qmp_dlkm.ko
 ifneq (,$(filter avr% , $(TARGET_PRODUCT)))
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/aw882xx_dlkm.ko
 endif
-ifneq (,$(filter vantage% vantg% blanc%, $(TARGET_PRODUCT)))
+ifneq (,$(filter vantage% vantg% blanc% makalu%, $(TARGET_PRODUCT)))
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/tfa98xx_dlkm.ko
 endif
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/simple_amp_dlkm.ko
