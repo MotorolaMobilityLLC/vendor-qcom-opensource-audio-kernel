@@ -36,14 +36,11 @@ typedef struct TfaIrqName {
 #include "tfa9894_tfafieldnames_N2.h"
 #include "tfa9875_tfafieldnames.h"
 #include "tfa9875_tfafieldnames_A1.h"
-#include "tfa9865_tfafieldnames.h"
 #include "tfa986x_tfafieldnames.h"
-#include "tfa9865_tfafieldnames_A2.h"
 #include "tfa986xn2_tfafieldnames.h"
-#include "tfa986xn3_tfafieldnames.h"
 #include "tfa9867_tfafieldnames.h"
 #include "tfa9867_tfafieldnames_B.h"
-
+#include "tfd1015_tfdfieldnames.h"
 
 /* missing 'common' defs break the build but unused in TFA1 context */
 #define TFA1_BF_AMPINSEL -1
@@ -71,6 +68,9 @@ typedef struct TfaIrqName {
 /* missing 'common' defs break the build */
 #define TFA2_BF_CFSM -1
 
+/* KEY1 access register */
+#define TFA1_BF_KEY1 0x0b07
+#define TFA2_BF_KEY1 0xa007
 
 /* MTP access uses registers
  *  defs are derived from corresponding bitfield names as used in the BF macros

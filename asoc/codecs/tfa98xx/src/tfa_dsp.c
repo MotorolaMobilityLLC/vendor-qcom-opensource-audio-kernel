@@ -39,7 +39,7 @@
 #define MIN_BATT_LEVEL 640
 #define MAX_BATT_LEVEL 670
 void tfanone_ops(struct tfa_device_ops *ops);
-void tfa9865_ops(struct tfa_device_ops *ops);
+void tfd1015_ops(struct tfa_device_ops *ops);
 void tfa986x_ops(struct tfa_device_ops *ops);
 void tfa9867_ops(struct tfa_device_ops *ops);
 void tfa9872_ops(struct tfa_device_ops *ops);
@@ -238,6 +238,26 @@ int tfa_irq_set_pol(struct tfa_device *tfa, enum tfa9912_irq bit, int state)
 	return 0;
 }
 
+static char *tfatfd_irq_info[] = {
+	"Power on reset",
+	"Undervoltage VDDIO",
+	"Overtemperature",
+	"Overcurrent amp",
+	"Undervoltage",
+	"TDM error",
+	"Lost clock",
+	"DC too high amp",
+	"Brown out VDDD",
+	"Clock out of range",
+	"Overvoltage protection",
+	"Qpump fail",
+	"Overvoltage protection",
+	"Qpump fail",
+	"Undervoltage VDDP",
+	"Overvoltage VDDP"};
+
+TFD1015_IRQ_NAMETABLE_IE_ORDER;
+
 /* new interrupt functions for non-coolflux devices not using tfa9912_irq defs */
 static char *tfa986x_irq_info[] = {
 	"Power on reset",
@@ -298,6 +318,12 @@ int tfa_irq_report(struct tfa_device *tfa)
 		irq_max = ARRAY_SIZE(tfa987x_irq_info);
 		irq_names = Tfa9878IrqNames;
 		irq_info = tfa987x_irq_info;
+	}
+	else if (tfa->revid == 0x00000a15)
+	{
+		irq_max = ARRAY_SIZE(tfatfd_irq_info);
+		irq_names = tfd1015_irq_names_ie_order;
+		irq_info = tfatfd_irq_info;
 	}
 	else
 	{
@@ -378,17 +404,16 @@ void tfa_set_query_info(struct tfa_device *tfa)
 		tfanone_ops(&tfa->dev_ops); /* register device operations via tfa hal*/
 		tfa->bus = 1;
 		break;
-	case 0x65:
-       /* tfa9865 */
-       tfa->supportDrc = supportYes;
-       tfa->tfa_family = 2;
-       tfa->spkr_count = 1;
-       tfa->is_probus_device = 1;
-       tfa->is_otp_device = 1;
-       tfa->advance_keys_handling = 1; /*artf65038*/
-       tfa->daimap = Tfa98xx_DAI_TDM;
-       tfa9865_ops(&tfa->dev_ops); /* register device operations */
-       break;
+	case 0x15:
+		/* tfd1015 */
+		tfa->supportDrc = supportYes;
+		tfa->tfa_family = 2;
+		tfa->spkr_count = 1;
+		tfa->is_probus_device = 1;
+		tfa->advance_keys_handling = 1; /*artf65038*/
+		tfa->daimap = Tfa98xx_DAI_TDM;
+		tfd1015_ops(&tfa->dev_ops); /* register device operations */
+		break;
 	case 0x66:
        /* tfa9865 */
        tfa->supportDrc = supportYes;
@@ -941,6 +966,26 @@ enum Tfa98xx_Error tfa98xx_get_mtp(struct tfa_device *tfa, uint16_t *value)
 	*value = (uint16_t)result;
 
 	return Tfa98xx_Error_Ok;
+}
+
+/**
+ * lock or unlock KEY1
+ * lock = 1 will lock
+ * lock = 0 will unlock
+ * note that on return all the hidden key will be off
+ */
+void tfa98xx_key1(struct tfa_device* tfa, int lock)
+{
+	unsigned short value=0, xor=0;
+	/* unhide lock registers */
+	tfa_reg_write(tfa, (tfa->tfa_family == 1) ? 0x40 : 0x0F, 0x5A6B);
+	/* lock/unlock key1 */
+	tfa_reg_read(tfa, 0xFB, &value);
+	xor = value ^ 0x005A;
+	TFA_WRITE_REG(tfa, KEY1, lock ? 0 : xor);
+	/* hide lock registers */
+	if (!tfa->advance_keys_handling) /*artf65038*/
+		tfa_reg_write(tfa, (tfa->tfa_family == 1) ? 0x40 : 0x0F, 0);
 }
 
 /*
@@ -3148,8 +3193,10 @@ enum Tfa98xx_Error tfaRunStartup(struct tfa_device *tfa, int profile)
 		TFA_SET_BF(tfa, AUDFS, audfs);
 		TFA_SET_BF(tfa, FRACTDEL, fractdel);
 #ifdef __KERNEL__
-	if ((tfa->dynamicTDMmode == 3) && tfa_dev_set_tdm_bitwidth(tfa,tfa->bitwidth))
-		return Tfa98xx_Error_Fail;
+		if ((tfa->dynamicTDMmode == 3) && tfa_dev_set_tdm_bitwidth(tfa, tfa->bitwidth)) {
+			err = Tfa98xx_Error_Fail;
+			goto lock_keys;
+		}
 #endif//
 	}
 	else {
@@ -3179,6 +3226,11 @@ enum Tfa98xx_Error tfaRunStartup(struct tfa_device *tfa, int profile)
 	tfa_dev_set_state(tfa, TFA_STATE_INIT_CF, strstr(tfaContProfileName(tfa->cnt, tfa->dev_idx, profile), ".cal") != NULL);
 
 	err = tfa_show_current_state(tfa);
+
+lock_keys:
+	/* Lock back key1 and key2 */
+	tfa98xx_key2(tfa, 1);
+	tfa98xx_key1(tfa, 1);
 
 	return err;
 }
@@ -3478,6 +3530,20 @@ enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
 {
 	int err = Tfa98xx_Error_Ok;
 	int manstate = -1, tries = 0, temps = 0;
+	int bSetAmpDirCtrls = 0;
+	int isLocked = 0;
+	uint16_t bf_amp_idle_not = tfaContBfEnumByNameRevid("amp_idle_not", tfa->revid);
+	uint16_t bf_amp_use_direct_ctrls = tfaContBfEnumByNameRevid("amp_use_direct_ctrls", tfa->revid);
+
+	/* If amp_idle_not is set, then set the amp_use_direct_ctrls after powerdown */
+	if (bf_amp_idle_not != 0xffff &&
+		bf_amp_use_direct_ctrls != 0xffff &&
+		tfa_get_bf(tfa, bf_amp_idle_not) == 1) {
+		bSetAmpDirCtrls = 1;
+		isLocked = tfa_get_bf(tfa, TFA2_BF_KEY1LOCKED);
+		if (isLocked)
+			tfa98xx_key1(tfa, 0); /* unlock */
+	}
 
 	/* mute */
 	tfaRunMute(tfa);
@@ -3489,11 +3555,14 @@ enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
 	err = tfa98xx_powerdown(tfa, 1);
 	if (err != Tfa98xx_Error_Ok) {
         pr_err("tfa98xx_powerdown fail, err = %d\n", err);
-		return tfa_error_max;;                                   //modify by mono for kernel6.1 20231030
+		goto exit_with_error;                                  //modify by mono for kernel6.1 20231030
     }
 
 	/* disable I2S output on TFA1 devices without TDM */
 	err = tfa98xx_aec_output(tfa, 0);
+
+	if (bSetAmpDirCtrls)
+		tfa_set_bf(tfa, bf_amp_use_direct_ctrls, 1);
 
 	/*Ensure the state machine in powerdown mode here*/
 	if((tfa->tfa_family==2)&&(tfa->is_probus_device==0)) {
@@ -3516,8 +3585,10 @@ enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
         pr_info("exit, TEMPS = %d, tries=%d\n", temps, tries);
     }
 
-    if (err > tfa_error_max)
-        err = tfa_error_max;
+
+exit_with_error:
+	if (isLocked)
+		tfa98xx_key1(tfa, 1); /* lock back */
 
     return err;
 }
@@ -4042,7 +4113,7 @@ int tfa_dev_probe(int slave, struct tfa_device *tfa)
 		return -1;
 	}
 
-	if ( (rev >> 8) == 0x98 ) /* new family has 0x98 in rev MSB */
+	if (((rev >> 8) == 0x98) || ((rev >> 8) == 0x10))		/* new family has 0x98 in rev MSB */
 	{
 		/*overwriteing tfa->rev MSB with the revision number to match with older devices representation*/
 		if (tfa98xx_read_register16(tfa, 6, &reg_6) != Tfa98xx_Error_Ok) {
@@ -4075,6 +4146,8 @@ enum tfa_error tfa_dev_set_state(struct tfa_device *tfa, enum tfa_state state, i
 	int err = tfa_error_ok;
 	int loop = 50, ready = 0;
 	int count;
+	uint16_t bf_amp_idle_not = 0xffff;
+	uint16_t bf_amp_use_direct_ctrls = 0xffff;
 
 	/* Base states */
 	/* Do not change the order of setting bits as this is important! */
@@ -4121,6 +4194,21 @@ enum tfa_error tfa_dev_set_state(struct tfa_device *tfa, enum tfa_state state, i
 	case TFA_STATE_OPERATING:    /* Amp and Algo running */
 								 /* Depending on our previous state we need to set 3 bits */
 		TFA_SET_BF(tfa, PWDN, 0);	/* Coming from state 0 */
+
+		/* If amp_idle_not is set, then reset the amp_use_direct_ctrls after powerup */
+		bf_amp_idle_not = tfaContBfEnumByNameRevid("amp_idle_not", tfa->revid);
+		bf_amp_use_direct_ctrls = tfaContBfEnumByNameRevid("amp_use_direct_ctrls", tfa->revid);
+		if (bf_amp_idle_not != 0xffff &&
+			bf_amp_use_direct_ctrls != 0xffff &&
+			tfa_get_bf(tfa, bf_amp_idle_not) == 1) {
+			int isLocked = tfa_get_bf(tfa, TFA2_BF_KEY1LOCKED);
+			if (isLocked)
+				tfa98xx_key1(tfa, 0); /* unlock */
+			tfa_set_bf(tfa, bf_amp_use_direct_ctrls, 0);
+			if (isLocked)
+				tfa98xx_key1(tfa, 1); /* lock back */
+		}
+
 		TFA_SET_BF(tfa, MANSCONF, 1);	/* Coming from state 1 */
 		if (!tfa->is_probus_device)
 			TFA_SET_BF(tfa, SBSL, 1);	/* Coming from state 6 */
@@ -4131,8 +4219,7 @@ enum tfa_error tfa_dev_set_state(struct tfa_device *tfa, enum tfa_state state, i
 										* Disable MTP clock to protect memory.
 										* However in case of calibration wait for DSP! (This should be case only during calibration).
 										*/
-		if (TFA_GET_BF(tfa, MTPOTC) == 1 &&
-            tfa->tfa_family == 2 && !tfa->is_probus_device) {
+		if (tfa->tfa_family == 2 && ((tfa->rev & 0xff) != 0x66) && ((tfa->rev & 0xff) != 0x67) && TFA_GET_BF(tfa, MTPOTC) == 1) {
 			count = MTPEX_WAIT_NTRIES * 4; /* Calibration takes a lot of time */
 			while ((TFA_GET_BF(tfa, MTPEX) != 1) && count) {
 				msleep_interruptible(10);

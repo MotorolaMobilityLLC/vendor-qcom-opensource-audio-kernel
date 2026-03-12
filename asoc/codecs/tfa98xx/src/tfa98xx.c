@@ -30,6 +30,7 @@
 #include <linux/kthread.h>
 #include "config.h"
 #include "tfa98xx.h"
+#include "tfa_dsp_fw.h"
 #include "tfa.h"
 
  /* required for enum tfa9912_irq */
@@ -297,7 +298,10 @@ static enum tfa_error tfa98xx_tfa_start(struct tfa98xx *tfa98xx, int next_profil
 			next_profile, vstep, delta_time);
 	}
 
-	if ((err == tfa_error_ok) && (tfa98xx->set_mtp_cal)) {
+	if ((err == tfa_error_ok) &&
+		(tfa98xx->set_mtp_cal) &&
+		((tfa98xx->tfa->rev & 0xff) != 0x66) &&
+		((tfa98xx->tfa->rev & 0xff) != 0x67)) {
 		enum tfa_error err_cal;
 		err_cal = tfa98xx_write_re25(tfa98xx->tfa, tfa98xx->cal_data);
 		if (err_cal != tfa_error_ok) {
@@ -1902,11 +1906,14 @@ static int tfa98xx_set_cal_ctl(struct snd_kcontrol *kcontrol,
 		tfa98xx->cal_data = (uint16_t)ucontrol->value.integer.value[i];
 
 		mutex_lock(&tfa98xx->dsp_lock);
-		err = tfa98xx_write_re25(tfa98xx->tfa, tfa98xx->cal_data);
-		tfa98xx->set_mtp_cal = (err != tfa_error_ok);
-		if (tfa98xx->set_mtp_cal == false) {
-			pr_info("Calibration value (%d) set in mtp\n",
-				tfa98xx->cal_data);
+		if(((tfa98xx->tfa->rev & 0xff) != 0x66) &&
+			((tfa98xx->tfa->rev & 0xff) != 0x67)){
+			err = tfa98xx_write_re25(tfa98xx->tfa, tfa98xx->cal_data);
+			tfa98xx->set_mtp_cal = (err != tfa_error_ok);
+			if (tfa98xx->set_mtp_cal == false) {
+				pr_info("Calibration value (%d) set in mtp\n",
+					tfa98xx->cal_data);
+			}
 		}
 		mutex_unlock(&tfa98xx->dsp_lock);
 	}
@@ -2850,6 +2857,7 @@ static void tfa98xx_nmode_update_work(struct work_struct *work)
 	mutex_unlock(&tfa98xx->dsp_lock);
 	queue_delayed_work(tfa98xx->tfa98xx_wq, &tfa98xx->nmodeupdate_work,5 * HZ);
 }
+
 static void tfa98xx_monitor(struct work_struct *work)
 {
 	struct tfa98xx *tfa98xx;
@@ -4246,6 +4254,11 @@ static int tfa98xx_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id 
 			return -EIO;
 		}
 		switch (reg & 0xff) {
+		case 0x15: /* tfd1015*/
+			pr_info("TFD1015 detected\n");
+			tfa98xx->flags |= TFA98XX_FLAG_TDM_DEVICE;
+			tfa98xx->flags |= TFA98XX_FLAG_OTP_TYPE_DEVICE;
+			break;
 		case 0x72: /* tfa9872 */
 			pr_info("TFA9872 detected\n");
 			tfa98xx->flags |= TFA98XX_FLAG_MULTI_MIC_INPUTS;
@@ -4278,11 +4291,6 @@ static int tfa98xx_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id 
 			tfa98xx->flags |= TFA98XX_FLAG_MULTI_MIC_INPUTS;
 			tfa98xx->flags |= TFA98XX_FLAG_CALIBRATION_CTL;
 			tfa98xx->flags |= TFA98XX_FLAG_TDM_DEVICE;
-			break;
-		case 0x65: /* tfa9865*/
-			pr_info("TFA9865 detected\n");
-			tfa98xx->flags |= TFA98XX_FLAG_TDM_DEVICE;
-			tfa98xx->flags |= TFA98XX_FLAG_OTP_TYPE_DEVICE;
 			break;
 		case 0x66: /* tfa986x*/
 			pr_info("TFA986x detected\n");
@@ -4501,7 +4509,6 @@ static struct of_device_id tfa98xx_dt_match[] = {
 	{.compatible = "tfa,tfa9875" },
 	{.compatible = "tfa,tfa9874" },
 	{.compatible = "tfa,tfa9878" },
-	{.compatible = "tfa,tfa9865" },
 	{.compatible = "tfa,tfa9888" },
 	{.compatible = "tfa,tfa9890" },
 	{.compatible = "tfa,tfa9891" },
@@ -4511,6 +4518,8 @@ static struct of_device_id tfa98xx_dt_match[] = {
 	{.compatible = "tfa,tfa9897" },
 	{.compatible = "tfa,tfa9912" },
 	{.compatible = "tfa,tfa986x" },
+	{.compatible = "tfa,tfa9864" },
+	{.compatible = "tfa,tfa9865" },
 	{.compatible = "tfa,tfa9867" },
 	{ },
 };
