@@ -76,7 +76,7 @@ def define_canoe():
             "CONFIG_SND_SOC_TFA98XX_SEN_MI2S",
         ]
     )
-  elif mmi_product_name in ["avr"]:
+  elif mmi_product_name in ["avr", "eletre"]:
         define_target_modules(
         target = "canoe",
         variants = ["consolidate", "perf"],

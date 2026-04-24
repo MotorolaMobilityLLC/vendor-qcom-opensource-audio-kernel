@@ -53,7 +53,7 @@ endif
 ifeq ($(call is-board-platform-in-list,sun canoe alor whale chora),true)
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/lpass_bt_swr_dlkm.ko
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/qmp_dlkm.ko
-ifneq (,$(filter avr% , $(TARGET_PRODUCT)))
+ifneq (,$(filter avr% eletre%, $(TARGET_PRODUCT)))
 AUDIO_KERNEL_MODULES += $(KERNEL_MODULES_OUT)/aw882xx_dlkm.ko
 endif
 ifneq (,$(filter vantage% vantg% blanc% makalu%, $(TARGET_PRODUCT)))
